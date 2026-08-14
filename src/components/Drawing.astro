@@ -32,14 +32,20 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
   {
     !compact && (
       <div class="dw__head" aria-hidden="true">
-        <span class="dw__sheet">лист {sheet}</span>
+        <span class="dw__sheet">рис {sheet}</span>
         <span class="dw__rule" />
-        <span class="dw__kind">рисунок</span>
+        <span class="dw__kind">не фотография</span>
       </div>
     )
   }
 
   <div class="dw__plate">
+    {/* Угловые метки — фирменный приём системы: «сюда помещается предмет».
+        Здесь он на своём месте: в рамке показана деталь. */}
+    <span class="dw__tick" aria-hidden="true"></span>
+    <span class="dw__tick" aria-hidden="true"></span>
+    <span class="dw__tick" aria-hidden="true"></span>
+    <span class="dw__tick" aria-hidden="true"></span>
     <svg
       class="dw__svg"
       viewBox="0 0 320 220"
@@ -71,7 +77,8 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
     grid-template-rows: auto 1fr auto;
     height: 100%;
     padding: 0.7rem 0.85rem 0.6rem;
-    background: var(--paper-raised);
+    background: var(--photo-mat);
+    border-radius: var(--r-md);
     color: var(--draw-ink);
     container-type: inline-size;
   }
@@ -88,8 +95,8 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
     align-items: center;
     gap: 0.55rem;
     font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.14em;
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-eyebrow);
     text-transform: uppercase;
     color: var(--draw-faint);
   }
@@ -107,12 +114,46 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
      Миллиметровка: мелкая клетка плюс крупная каждые 5 шагов. Рисуется
      градиентами, чтобы не тащить растр.                                    */
 
+  /* Угловые метки. В системе они стоят на всём, что показывает деталь, —
+     рисунок ровно этим и занят. */
+  .dw__tick {
+    position: absolute;
+    width: var(--bracket-len);
+    height: var(--bracket-len);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .dw__tick:nth-of-type(1) {
+    inset-block-start: -1px;
+    inset-inline-start: -1px;
+    border-block-start: var(--bracket-w) solid var(--bracket-color);
+    border-inline-start: var(--bracket-w) solid var(--bracket-color);
+  }
+  .dw__tick:nth-of-type(2) {
+    inset-block-start: -1px;
+    inset-inline-end: -1px;
+    border-block-start: var(--bracket-w) solid var(--bracket-color);
+    border-inline-end: var(--bracket-w) solid var(--bracket-color);
+  }
+  .dw__tick:nth-of-type(3) {
+    inset-block-end: -1px;
+    inset-inline-start: -1px;
+    border-block-end: var(--bracket-w) solid var(--bracket-color);
+    border-inline-start: var(--bracket-w) solid var(--bracket-color);
+  }
+  .dw__tick:nth-of-type(4) {
+    inset-block-end: -1px;
+    inset-inline-end: -1px;
+    border-block-end: var(--bracket-w) solid var(--bracket-color);
+    border-inline-end: var(--bracket-w) solid var(--bracket-color);
+  }
+
   .dw__plate {
     position: relative;
     min-height: 0;
     display: grid;
     place-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     background-color: var(--draw-paper);
     background-image:
       linear-gradient(var(--draw-grid-2) 1px, transparent 1px),
@@ -124,30 +165,7 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
       40px 40px,
       8px 8px,
       8px 8px;
-    border: 1px solid var(--draw-frame);
-  }
-
-  /* Уголки рамки — как углы на настоящем листе. */
-  .dw__plate::before,
-  .dw__plate::after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border: 1px solid var(--draw-accent);
-    opacity: 0.55;
-  }
-  .dw__plate::before {
-    inset-block-start: 4px;
-    inset-inline-start: 4px;
-    border-inline-end: 0;
-    border-block-end: 0;
-  }
-  .dw__plate::after {
-    inset-block-end: 4px;
-    inset-inline-end: 4px;
-    border-inline-start: 0;
-    border-block-start: 0;
+    border-radius: var(--r-md);
   }
 
   .dw__svg {
@@ -162,9 +180,8 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
   .dw__cap {
     margin-block-start: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.65rem;
-    line-height: 1.35;
-    letter-spacing: 0.01em;
+    font-size: var(--step--1);
+    line-height: 1.4;
     color: var(--draw-faint);
     overflow: hidden;
     display: -webkit-box;

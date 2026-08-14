@@ -22,11 +22,12 @@
     "preview:file": "node scripts/make-preview.mjs",
     "bundle": "node scripts/make-site-bundle.mjs",
     "quiz": "node scripts/make-quiz.mjs",
-    "shot": "node scripts/shot.mjs"
+    "shot": "node scripts/shot.mjs",
+    "photos:add": "node scripts/add-photos.mjs"
   },
   "dependencies": {
-    "astro": "^7.2.2",
     "@astrojs/sitemap": "^3.7.3",
+    "astro": "^7.2.2",
     "sharp": "^0.35.3"
   },
   "devDependencies": {

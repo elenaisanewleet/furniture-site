@@ -31,14 +31,23 @@ body {
   font-feature-settings: 'kern' 1, 'liga' 1;
   overflow-wrap: break-word;
 
-  /* Подложка — миллиметровка. Крупная клетка на просвет, мелкая почти на
-     пределе видимости: страница должна ощущаться листом, а не разлиновкой. */
+  /* Подложка — пятнистость штукатурки, плитка процедурная, не фотография. */
   background-color: var(--paper);
-  background-image:
-    linear-gradient(var(--draw-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--draw-grid) 1px, transparent 1px);
-  background-size: 88px 88px, 88px 88px;
-  background-position: center top;
+  background-image: var(--texture-mottle);
+  background-size: 520px 520px;
+}
+
+/* Зерно телефонной съёмки поверх всего. Фиксированное: оно принадлежит
+   экрану, а не странице, и при прокрутке не должно ехать вместе с ней. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: var(--texture-grain);
+  background-size: 190px 190px;
+  opacity: var(--texture-grain-opacity);
 }
 
 img,
@@ -65,6 +74,8 @@ button {
 
 /* ---- Headings --------------------------------------------------------- */
 
+/* Заголовки набираются как реплики: строчными, тяжело, плотно. Прописные —
+   только у моно-лейблов, и там это выключка на трекинге, а не крик. */
 h1,
 h2,
 h3,
@@ -74,7 +85,7 @@ h4 {
   overflow-wrap: normal;
   word-break: keep-all;
   hyphens: none;
-  font-weight: 600;
+  font-weight: 700;
   line-height: var(--lh-heading);
   letter-spacing: var(--tracking-heading);
   text-wrap: balance;
@@ -82,17 +93,22 @@ h4 {
 
 h1 {
   font-size: var(--step-5);
+  font-weight: 900;
   line-height: var(--lh-display);
   letter-spacing: var(--tracking-display);
 }
 h2 {
   font-size: var(--step-4);
+  font-weight: 800;
+  letter-spacing: -0.025em;
 }
 h3 {
   font-size: var(--step-2);
 }
 h4 {
   font-size: var(--step-1);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -101,8 +117,14 @@ p {
 
 a {
   color: inherit;
-  text-underline-offset: 0.18em;
-  text-decoration-thickness: from-font;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--dur-2) var(--ease);
+}
+
+::selection {
+  background: var(--signal-100);
+  color: var(--ink-900);
 }
 
 /* ---- Focus ------------------------------------------------------------ */
@@ -176,12 +198,22 @@ a {
   --ink-2: color-mix(in srgb, var(--ink-invert) 80%, transparent);
   --ink-3: color-mix(in srgb, var(--ink-invert) 62%, transparent);
   --accent-ink: var(--accent-on-ink);
-  /* Тёмная полоса — тот же лист, только перевёрнутый: сетка остаётся. */
-  background-image:
-    linear-gradient(rgb(180 200 210 / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(180 200 210 / 0.05) 1px, transparent 1px);
-  background-size: 88px 88px, 88px 88px;
-  background-position: center top;
+  --bracket-color: var(--paper-0);
+  /* Фонов на странице не больше двух: бумага и чернила. Никакого рисунка
+     поверх тёмной полосы — она сама и есть второй фон. */
+  background-image: none;
+}
+
+/* Сосновая полоса — обшивка стены мастерской. Ставится над тёмным блоком
+   узкой лентой, не заливкой: это отбивка, а не фон. */
+.section--ink > .pine-edge,
+.pine-edge {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--pine-500) 0 46px,
+    var(--pine-700) 46px 48px
+  );
 }
 
 .section--ink :is(h1, h2, h3) {
@@ -219,18 +251,18 @@ a {
   color: var(--ink-3);
 }
 
-/* Уголок выноски: вертикальная засечка и горизонтальная полка. */
+/* Короткая метка перед лейблом — не выноска и не украшение, а якорь для
+   глаза: без неё моно-строка теряется в воздухе над заголовком. */
 .eyebrow::before {
   content: '';
-  width: 1.5rem;
-  height: 0.5rem;
+  width: 18px;
+  height: var(--bracket-w);
   flex: none;
-  border-block-end: 1px solid var(--accent);
-  border-inline-start: 1px solid var(--accent);
+  background: var(--signal-500);
 }
 
 .section--ink .eyebrow { color: color-mix(in srgb, var(--ink-invert) 66%, transparent); }
-.section--ink .eyebrow::before { border-color: var(--accent-on-ink); }
+.section--ink .eyebrow::before { background: var(--accent-on-ink); }
 
 .lede {
   font-size: var(--step-1);
@@ -283,85 +315,94 @@ a {
 
 /* ---- Buttons ----------------------------------------------------------- */
 
-/* Кнопка — штамп, а не пилюля: прямые углы, смещённый контур вместо тени.
-   При нажатии «садится» на подложку — движение читается без анимации цвета. */
+/* Кнопка. Заливка меняется при наведении, при нажатии кнопка уходит на
+   пиксель вниз — и всё. Ни масштаба, ни тени, ни подпрыгивания. */
 .btn {
-  --btn-bg: var(--ink);
-  --btn-fg: var(--ink-invert);
-  --btn-bd: var(--ink);
-  --btn-shadow: var(--line-strong);
+  --btn-bg: var(--signal-500);
+  --btn-fg: var(--paper-0);
+  --btn-bd: var(--signal-500);
+  --btn-bg-hover: var(--signal-600);
+  --btn-bd-hover: var(--signal-600);
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
-  min-height: 3.25rem;
-  padding: 0.85rem 1.6rem;
+  gap: 10px;
+  min-height: var(--tap-comfortable);
+  padding: 0 22px;
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1.5px solid var(--btn-bd);
-  border-radius: 0;
+  border-radius: var(--r-md);
   font-family: var(--font-display);
-  font-size: var(--step-0);
-  font-weight: 600;
-  letter-spacing: -0.005em;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
   text-decoration: none;
   text-align: center;
+  white-space: nowrap;
   transition:
-    transform var(--dur-1) var(--ease),
     background-color var(--dur-2) var(--ease),
     color var(--dur-2) var(--ease),
     border-color var(--dur-2) var(--ease),
-    box-shadow var(--dur-1) var(--ease);
+    transform var(--dur-1) var(--ease);
 }
 
 .btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 4px 4px 0 var(--btn-shadow);
+  background: var(--btn-bg-hover);
+  border-color: var(--btn-bd-hover);
 }
 .btn:active {
-  transform: translate(0, 0);
-  box-shadow: 0 0 0 var(--btn-shadow);
+  transform: translateY(1px);
+}
+
+/* Чернильная — второе по силе действие. Сигнальная остаётся одна на экран. */
+.btn--ink {
+  --btn-bg: var(--ink);
+  --btn-fg: var(--ink-invert);
+  --btn-bd: var(--ink);
+  --btn-bg-hover: var(--ink-800);
+  --btn-bd-hover: var(--ink-800);
 }
 
 .btn--ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
   --btn-bd: var(--line-strong);
-  --btn-shadow: var(--line);
-}
-.btn--ghost:hover {
-  --btn-bd: var(--ink);
+  --btn-bg-hover: var(--paper-sunken);
+  --btn-bd-hover: var(--line-strong);
 }
 
 .btn--accent {
   --btn-bg: var(--accent);
   --btn-fg: var(--accent-on);
   --btn-bd: var(--accent);
-  --btn-shadow: var(--ink);
+  --btn-bg-hover: var(--signal-600);
+  --btn-bd-hover: var(--signal-600);
 }
 
 .btn--on-ink {
-  --btn-bg: var(--paper);
-  --btn-fg: var(--ink);
-  --btn-bd: var(--paper);
-  --btn-shadow: var(--accent-on-ink);
+  --btn-bg: var(--paper-0);
+  --btn-fg: var(--ink-900);
+  --btn-bd: var(--paper-0);
+  --btn-bg-hover: var(--paper-100);
+  --btn-bd-hover: var(--paper-100);
 }
 
 .btn--on-ink-ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink-invert);
-  --btn-bd: color-mix(in srgb, var(--ink-invert) 35%, transparent);
-  --btn-shadow: color-mix(in srgb, var(--ink-invert) 30%, transparent);
-}
-.btn--on-ink-ghost:hover {
-  --btn-bd: var(--ink-invert);
+  --btn-bd: color-mix(in srgb, var(--ink-invert) 38%, transparent);
+  --btn-bg-hover: color-mix(in srgb, var(--ink-invert) 10%, transparent);
+  --btn-bd-hover: var(--ink-invert);
 }
 
+/* Главное действие — выше и крупнее: на телефоне оно под большим пальцем. */
 .btn--lg {
-  min-height: 3.75rem;
-  padding: 1rem 2rem;
-  font-size: var(--step-1);
+  min-height: var(--tap-primary);
+  padding: 0 30px;
+  font-size: 1.0625rem;
 }
 
 .btn--block {
@@ -392,63 +433,84 @@ a {
 
 /* ---- Cards ------------------------------------------------------------- */
 
-/* Карточка — лист в стопке: прямая рамка, уголок-засечка, при наведении
-   выходит из стопки и открывает контур под собой. */
+/* Карточка. Глубина делается волосяной линией, а не размытием: при
+   наведении линия темнеет и карточка поднимается на два пикселя. */
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
   background: var(--paper-raised);
-  border: 1px solid var(--line-strong);
-  border-radius: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   overflow: hidden;
   transition:
     border-color var(--dur-2) var(--ease),
-    transform var(--dur-2) var(--ease),
-    box-shadow var(--dur-2) var(--ease);
-}
-
-/* Срезанный уголок — метка листа. Декоративная, поверх содержимого. */
-.card::after {
-  content: '';
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: 0;
-  width: 13px;
-  height: 13px;
-  background: linear-gradient(
-    to bottom left,
-    var(--paper) 0 50%,
-    var(--line-strong) 50% calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
-  pointer-events: none;
-  z-index: 3;
+    background-color var(--dur-2) var(--ease),
+    transform var(--dur-2) var(--ease);
 }
 
 .card:has(a:hover),
 .card:has(a:focus-visible) {
-  border-color: var(--ink);
-  transform: translate(-3px, -3px);
-  box-shadow: 5px 5px 0 var(--line-strong);
+  border-color: var(--line-strong);
+  transform: translateY(-2px);
 }
 
 .section--ink .card {
-  background: color-mix(in srgb, var(--ink-invert) 4%, transparent);
-  border-color: color-mix(in srgb, var(--ink-invert) 22%, transparent);
-}
-.section--ink .card::after {
-  background: linear-gradient(
-    to bottom left,
-    var(--paper-invert) 0 50%,
-    color-mix(in srgb, var(--ink-invert) 30%, transparent) 50% calc(50% + 1px),
-    transparent calc(50% + 1px)
-  );
+  background: color-mix(in srgb, var(--ink-invert) 5%, transparent);
+  border-color: color-mix(in srgb, var(--ink-invert) 18%, transparent);
 }
 .section--ink .card:has(a:hover),
 .section--ink .card:has(a:focus-visible) {
   border-color: var(--ink-invert);
-  box-shadow: 5px 5px 0 var(--accent-on-ink);
+}
+
+/* ---- Угловые метки ------------------------------------------------------
+   Фирменный приём системы: четыре уголка вместо рамки. Значат ровно одно —
+   «сюда помещается предмет», поэтому ставятся только на то, что показывает
+   деталь: зону загрузки, превью снимка, плитку категории. Не украшение. */
+.brackets {
+  position: relative;
+}
+.brackets > .brackets__tick {
+  position: absolute;
+  width: var(--bracket-len);
+  height: var(--bracket-len);
+  pointer-events: none;
+  transition:
+    width var(--dur-3) var(--ease),
+    height var(--dur-3) var(--ease),
+    border-color var(--dur-2) var(--ease);
+}
+.brackets__tick:nth-child(1) {
+  inset-block-start: -1px;
+  inset-inline-start: -1px;
+  border-block-start: var(--bracket-w) solid var(--bracket-color);
+  border-inline-start: var(--bracket-w) solid var(--bracket-color);
+}
+.brackets__tick:nth-child(2) {
+  inset-block-start: -1px;
+  inset-inline-end: -1px;
+  border-block-start: var(--bracket-w) solid var(--bracket-color);
+  border-inline-end: var(--bracket-w) solid var(--bracket-color);
+}
+.brackets__tick:nth-child(3) {
+  inset-block-end: -1px;
+  inset-inline-start: -1px;
+  border-block-end: var(--bracket-w) solid var(--bracket-color);
+  border-inline-start: var(--bracket-w) solid var(--bracket-color);
+}
+.brackets__tick:nth-child(4) {
+  inset-block-end: -1px;
+  inset-inline-end: -1px;
+  border-block-end: var(--bracket-w) solid var(--bracket-color);
+  border-inline-end: var(--bracket-w) solid var(--bracket-color);
+}
+
+/* Активное состояние: уголки разъезжаются и краснеют. */
+.brackets.is-active > .brackets__tick {
+  width: 26px;
+  height: 26px;
+  border-color: var(--signal-500);
 }
 
 /* Whole-card click target driven by the single real link inside. */
@@ -482,14 +544,16 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.26rem 0.6rem;
-  border-radius: 0;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--r-sm);
   background: var(--paper-sunken);
-  border: 1px solid var(--line-strong);
+  border: 0;
   font-family: var(--font-mono);
   font-size: var(--step--2);
-  font-weight: 500;
-  letter-spacing: 0.03em;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--ink-2);
 }
 
@@ -670,11 +734,11 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.24rem 0.6rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 0;
+  padding: 0.3rem 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--step--1);
   letter-spacing: 0.04em;
   color: var(--ink-2);
   white-space: nowrap;
