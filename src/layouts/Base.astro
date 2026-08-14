@@ -12,6 +12,7 @@ import TaskDialog from '~/components/TaskDialog.astro';
 import { site } from '~/data/site';
 import { localBusiness, webSite, breadcrumbs, graph } from '~/lib/schema';
 import { SHOW_UNCONFIRMED } from '~/lib/facts';
+import { isTemporaryOrigin } from '~/lib/origin';
 
 interface Props {
   title: string;
@@ -46,6 +47,11 @@ const {
 const origin = Astro.site?.toString().replace(/\/$/, '') ?? '';
 const canonicalUrl = new URL(canonical, Astro.site ?? 'https://example.com').toString();
 
+/* Пока адрес временный, в поиск не пускаем ни одну страницу: иначе после
+   переезда на свой домен в выдаче останется его двойник. Снимется само,
+   как только SITE_URL укажет на настоящий домен. */
+const hideFromSearch = noindex || isTemporaryOrigin(Astro.site);
+
 const fullTitle =
   title === site.brand.name ? title : `${title} — ${site.brand.name}`;
 
@@ -66,8 +72,8 @@ const nodes = [
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
-    {noindex && <meta name="robots" content="noindex, nofollow" />}
-    {!noindex && <meta name="robots" content="index, follow, max-image-preview:large" />}
+    {hideFromSearch && <meta name="robots" content="noindex, nofollow" />}
+    {!hideFromSearch && <meta name="robots" content="index, follow, max-image-preview:large" />}
 
     <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#131215" media="(prefers-color-scheme: dark)" />

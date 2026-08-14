@@ -31,8 +31,20 @@ const EXCLUDED = new Set([
 /**
  * Production origin. Override with SITE_URL at build time:
  *   SITE_URL=https://example.ru npm run build
+ *
+ * На Vercel до появления своего домена SITE_URL задавать не нужно: адрес
+ * берётся из системной переменной. Важно, что это именно
+ * VERCEL_PROJECT_PRODUCTION_URL, а не VERCEL_URL — второй уникален для
+ * каждой выкладки, и canonical на нём менялся бы после каждого коммита,
+ * то есть указывал бы на адрес, которого через день уже нет.
+ *
+ * Пока адрес временный, сайт закрыт от индексации — см. src/lib/origin.ts.
  */
-const SITE = process.env.SITE_URL || 'https://masterskaya.example.ru';
+const VERCEL_HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+const SITE =
+  process.env.SITE_URL ||
+  (VERCEL_HOST ? `https://${VERCEL_HOST}` : null) ||
+  'https://masterskaya.example.ru';
 
 export default defineConfig({
   site: SITE,
