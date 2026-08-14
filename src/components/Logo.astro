@@ -63,6 +63,10 @@ const Tag = href ? 'a' : 'span';
     letter-spacing: -0.025em;
   }
 
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .logo__tag {
+    color: color-mix(in srgb, var(--ink-invert) 74%, transparent);
+  }
+
   .logo__tag {
     font-size: 0.61rem;
     font-weight: 500;

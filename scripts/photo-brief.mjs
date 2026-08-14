@@ -115,41 +115,46 @@ const missing = names.filter((n) => !have.has(n));
 
 const STYLE = `## Общий стиль съёмки
 
-Один визуальный язык для всех кадров. Он же — промпт, если изображения
-генерируются, а не снимаются.
+Перед работой прочитайте **\`docs/WORKSHOP-REFERENCE.md\`** — там описано,
+как выглядит именно эта мастерская: сосновая вагонка на стенах, бетонный
+пол, самодельные верстаки, тёплый свет лампы, старые крашеные станки и
+полки с крепежом, разобранным по банкам и коробкам.
+
+Это описание составлено по фотографиям владельца. Сами фотографии не
+публикуются — они только источник достоверности.
 
 **Что нужно**
 
 \`\`\`
-documentary furniture photography, natural daylight from a window,
-35mm or 50mm lens, subtle depth of field, real materials (ЛДСП, МДФ,
-плёнка, массив), realistic imperfections — dust, scuffs, worn edges,
-fingerprints, ordinary Russian apartment or a small working workshop,
-editorial documentary style, non-stock, unposed
+documentary workshop photography, small private workshop,
+pine tongue-and-groove walls, concrete floor, homemade workbenches,
+warm incandescent light with some daylight, honey-brown wood tones,
+galvanised hardware, glass jars and plastic bins of screws,
+old repainted machines, sawdust and worn paint,
+35mm or 50mm lens, subtle depth of field, unposed, non-stock
 \`\`\`
 
 **Чего быть не должно**
 
 \`\`\`
-luxury interiors, huge American kitchens, marble, gold, CGI render look,
-3D visualisation, perfect symmetry, sterile designer showroom, staged
-smiling models, impossible construction, watermark, text, oversharpening,
-HDR glow, obvious AI artifacts (wrong hinge geometry, melted hardware,
-extra fingers)
+luxury interiors, marble, large bright industrial workshop,
+brand-new shiny machines, empty tidy benches, people in white,
+staged smiles, CGI render look, perfect symmetry, showroom lighting,
+watermark, text, HDR glow, obvious AI artifacts
+(wrong hinge geometry, melted hardware, extra fingers)
 \`\`\`
 
-**Контекст**
+**Контекст клиента**
 
-Клиент этой мастерской живёт в обычной ульяновской квартире: типовой дом,
-обои, натяжной потолок, узкий коридор, кухня 6–9 м². Мебель на кадрах —
-настоящая, бывшая в употреблении. Мастерская — небольшая, рабочая, с
-опилками и инструментом не по линейке.
+Заказчик живёт в обычной ульяновской квартире: типовой дом, обои,
+натяжной потолок, узкий коридор, кухня 6–9 м². Мебель на кадрах —
+настоящая, бывшая в употреблении.
 
 **Люди**
 
 Лицо мастера не публикуется до его согласия. Снимайте руки, работу с
-инструментом, вид со спины, детали процесса. Оставленный слот
-\`master-portrait\` заменяется настоящим портретом позже.
+инструментом, вид со спины, детали процесса. Слот \`master-portrait\`
+заменяется настоящим портретом позже.
 
 ## Как подставить настоящую фотографию
 
@@ -161,6 +166,9 @@ extra fingers)
 Пропорции указаны для каждого слота — кадрируйте по ним, иначе снимок
 обрежется по центру. Форматы: \`.webp\` (предпочтительно), \`.avif\`,
 \`.jpg\`, \`.png\`.
+
+Пакетный импорт с очисткой EXIF, сжатием и генерацией размытых заглушек:
+\`node scripts/ingest-photos.mjs <папка>\` (карта слотов внутри скрипта).
 `;
 
 let md = `# Брифы на фотографии

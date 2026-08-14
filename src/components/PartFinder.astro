@@ -1,0 +1,335 @@
+---
+import { PARTS, PLACES } from '~/data/parts';
+
+/**
+ * Определитель детали.
+ *
+ * Каталог фурнитуры наоборот: вход не по типу механизма, а по тому, где
+ * стоит деталь и какими словами человек её называет. Работает без JS —
+ * тогда это просто полный список карточек с описаниями; с JS добавляются
+ * фильтр по месту, живой поиск по разговорным словам и раскрытие карточки.
+ */
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+---
+
+<section class:list={['pf', compact && 'pf--compact']} data-part-finder>
+  <div class="pf__controls">
+    <div class="pf__search">
+      <svg viewBox="0 0 20 20" aria-hidden="true" class="pf__search-icon">
+        <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="1.8" />
+        <path d="M13.5 13.5 17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+      <label class="visually-hidden" for="pf-q">Поиск детали своими словами</label>
+      <input
+        id="pf-q"
+        type="search"
+        placeholder="напишите как умеете: «рельса», «дверца висит»…"
+        autocomplete="off"
+        data-pf-search
+      />
+      <button type="button" class="pf__clear" data-pf-clear hidden>
+        <span class="visually-hidden">Очистить</span>
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="pf__places" role="group" aria-label="Где находится деталь">
+      <button type="button" class="pf__place is-on" data-pf-place="all">Всё</button>
+      {
+        PLACES.map((p) => (
+          <button type="button" class="pf__place" data-pf-place={p.id}>
+            {p.label}
+            <span>{p.note}</span>
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <p class="pf__count" role="status" aria-live="polite" data-pf-count></p>
+
+  <ul class="pf__grid">
+    {
+      PARTS.map((part) => (
+        <li
+          class="pf__item"
+          data-pf-card
+          data-place={part.place.join(' ')}
+          data-keywords={[part.said, part.term, ...part.aliases, ...part.symptoms]
+            .join(' ')
+            .toLowerCase()}
+        >
+          <article class="pf__card">
+            <button type="button" class="pf__face" aria-expanded="false" data-pf-toggle>
+              <span class="pf__draw" set:html={part.svg} />
+              <span class="pf__said">{part.said}</span>
+              <span class="pf__term">{part.term}</span>
+              <span class="pf__more" aria-hidden="true">Что это →</span>
+            </button>
+
+            <div class="pf__detail" hidden data-pf-detail>
+              <p class="pf__what">{part.what}</p>
+
+              <div class="pf__cols">
+                <div>
+                  <h3>Что обычно происходит</h3>
+                  <ul>
+                    {part.symptoms.map((s) => <li>{s}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <h3>Что сфотографировать</h3>
+                  <ul>
+                    {part.shoot.map((s) => <li>{s}</li>)}
+                  </ul>
+                </div>
+              </div>
+
+              <div class="pf__actions">
+                <button
+                  type="button"
+                  class="btn btn--accent"
+                  data-open-task
+                  data-cta={`partfinder_${part.id}`}
+                  data-preset="part"
+                >
+                  Показать свою деталь
+                </button>
+                <a class="link" href={`/${part.service}/`}>Подробнее об этом →</a>
+              </div>
+            </div>
+          </article>
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="pf__empty" hidden data-pf-empty>
+    По этим словам ничего не нашлось — и это совершенно нормально.
+    <button type="button" class="link" data-open-task data-cta="partfinder_empty" data-preset="part">
+      Сфотографируйте деталь, разберёмся вместе
+    </button>
+  </p>
+</section>
+
+<style>
+  .pf { display: grid; gap: var(--sp-5); }
+
+  /* ---- Controls ---- */
+  .pf__controls { display: grid; gap: var(--sp-4); }
+
+  .pf__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .pf__search-icon {
+    position: absolute;
+    left: 1rem;
+    width: 1.15rem;
+    color: var(--ink-3);
+    pointer-events: none;
+  }
+  .pf__search input {
+    width: 100%;
+    padding: 1rem 3rem 1rem 2.9rem;
+    background: var(--paper-raised);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: var(--step-0);
+    transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+  }
+  .pf__search input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+  .pf__search input::-webkit-search-cancel-button { display: none; }
+
+  .pf__clear {
+    position: absolute;
+    right: 0.7rem;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    color: var(--ink-3);
+  }
+  .pf__clear:hover { background: var(--paper-sunken); color: var(--ink); }
+  .pf__clear svg { width: 0.9rem; }
+
+  .pf__places {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-block-end: 0.25rem;
+    scrollbar-width: none;
+  }
+  .pf__places::-webkit-scrollbar { display: none; }
+
+  .pf__place {
+    display: grid;
+    gap: 0.05rem;
+    flex: none;
+    padding: 0.5rem 0.95rem;
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: var(--step--1);
+    font-weight: 600;
+    text-align: start;
+    white-space: nowrap;
+    transition: border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+  }
+  .pf__place span {
+    font-size: 0.66rem;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .pf__place:hover { border-color: var(--line-strong); }
+  .pf__place.is-on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--ink-invert);
+  }
+  .pf__place.is-on span { color: color-mix(in srgb, var(--ink-invert) 70%, transparent); }
+
+  .pf__count {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--ink-3);
+  }
+  .pf__count:empty { display: none; }
+
+  /* ---- Grid ---- */
+  .pf__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    gap: 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pf__item[hidden] { display: none; }
+  /* An open card takes the full row so the detail has room to breathe. */
+  .pf__item:has([aria-expanded='true']) { grid-column: 1 / -1; }
+
+  .pf__card {
+    height: 100%;
+    background: var(--paper-raised);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    transition: border-color var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+  }
+  .pf__item:has([aria-expanded='true']) .pf__card {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-2);
+  }
+
+  .pf__face {
+    display: grid;
+    gap: 0.3rem;
+    width: 100%;
+    height: 100%;
+    padding: var(--sp-4);
+    text-align: start;
+    align-content: start;
+  }
+  .pf__face:hover { background: var(--paper-sunken); }
+
+  .pf__draw {
+    display: block;
+    color: var(--ink);
+    margin-block-end: var(--sp-2);
+  }
+  .pf__draw :global(svg) {
+    width: 100%;
+    max-width: 8.5rem;
+    height: auto;
+  }
+  .pf__item:has([aria-expanded='true']) .pf__draw { color: var(--accent-ink); }
+
+  .pf__said {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 650;
+    line-height: 1.25;
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .pf__term {
+    font-size: var(--step--2);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+
+  .pf__more {
+    margin-block-start: 0.4rem;
+    font-size: var(--step--2);
+    color: var(--ink-3);
+  }
+  .pf__item:has([aria-expanded='true']) .pf__more { display: none; }
+
+  /* ---- Detail ---- */
+  .pf__detail {
+    padding: 0 var(--sp-4) var(--sp-5);
+    display: grid;
+    gap: var(--sp-4);
+    border-block-start: 1px solid var(--line);
+    margin-block-start: var(--sp-2);
+    padding-block-start: var(--sp-4);
+  }
+  .pf__detail[hidden] { display: none; }
+
+  .pf__what {
+    font-size: var(--step-0);
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+
+  .pf__cols { display: grid; gap: var(--sp-4); }
+  .pf__cols h3 {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-2);
+  }
+  .pf__cols ul {
+    display: grid;
+    gap: 0.3rem;
+    padding-inline-start: 1.05em;
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .pf__cols li::marker { color: var(--accent); }
+
+  .pf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-4);
+  }
+
+  .pf__empty {
+    padding: var(--sp-5);
+    background: var(--paper-sunken);
+    border-radius: var(--r-lg);
+    font-size: var(--step--1);
+    color: var(--ink-2);
+  }
+  .pf__empty[hidden] { display: none; }
+
+  @media (min-width: 42rem) {
+    .pf__cols { grid-template-columns: 1fr 1fr; gap: var(--sp-6); }
+  }
+</style>

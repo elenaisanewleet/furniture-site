@@ -176,6 +176,32 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     border-block-end-color: var(--line);
   }
 
+  /* Over a dark hero the bar is invisible and its contents flip to light,
+     until the page scrolls and the normal paper bar takes over. */
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .hdr__bar {
+    background: transparent;
+    backdrop-filter: none;
+  }
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) {
+    color: var(--ink-invert);
+  }
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .hdr__link,
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .hdr__phone {
+    color: color-mix(in srgb, var(--ink-invert) 82%, transparent);
+  }
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .hdr__link:hover {
+    color: var(--ink-invert);
+    background: color-mix(in srgb, var(--ink-invert) 10%, transparent);
+  }
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .hdr__cta {
+    --btn-bg: var(--paper);
+    --btn-fg: var(--ink);
+    --btn-bd: var(--paper);
+  }
+  :global(body[data-top='ink'] [data-header]:not(.is-stuck)) .hdr__burger {
+    color: var(--ink-invert);
+  }
+
   .hdr__inner {
     display: flex;
     align-items: center;

@@ -1,5 +1,6 @@
 ---
 import { resolve, register, ratioBox } from '~/lib/photo';
+import lqip from '~/data/lqip.json';
 
 interface Props {
   name: string;
@@ -13,6 +14,10 @@ interface Props {
   class?: string;
   /** Rounded corners are the caller's choice, not baked in. */
   rounded?: boolean;
+  /** Slow drift on scroll. Only for large decorative images. */
+  parallax?: boolean;
+  /** Shown under the image in mono — editorial caption. */
+  caption?: string;
 }
 
 const {
@@ -25,12 +30,15 @@ const {
   sizes = '(min-width: 68rem) 50vw, 100vw',
   class: className = '',
   rounded = true,
+  parallax = false,
+  caption,
 } = Astro.props;
 
 register({ name, alt, ratio, brief, where: where ?? Astro.url.pathname });
 
 const src = resolve(name);
 const { w, h } = ratioBox(ratio);
+const blur = (lqip as Record<string, string>)[name];
 
 // Deterministic per-slot hatch angle, so a given slot always looks the same.
 const seed = [...name].reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -38,9 +46,16 @@ const angle = 26 + (seed % 5) * 13;
 ---
 
 <figure
-  class:list={['photo', rounded && 'photo--rounded', !src && 'photo--empty', className]}
-  style={`--ratio:${ratio}; --hatch:${angle}deg`}
+  class:list={[
+    'photo',
+    rounded && 'photo--rounded',
+    !src && 'photo--empty',
+    parallax && 'photo--parallax',
+    className,
+  ]}
+  style={`--ratio:${ratio}; --hatch:${angle}deg;${blur ? ` --lqip:url("${blur}");` : ''}`}
   data-slot={name}
+  data-parallax={parallax ? '' : undefined}
 >
   {
     src ? (
@@ -53,6 +68,7 @@ const angle = 26 + (seed % 5) * 13;
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         fetchpriority={priority ? 'high' : 'auto'}
+        onload="this.closest('.photo')?.setAttribute('data-loaded','')"
       />
     ) : (
       <div class="photo__ph" role="img" aria-label={alt}>
@@ -78,6 +94,7 @@ const angle = 26 + (seed % 5) * 13;
       </figcaption>
     )
   }
+  {src && caption && <figcaption class="photo__caption">{caption}</figcaption>}
 </figure>
 
 <style>
@@ -90,6 +107,13 @@ const angle = 26 + (seed % 5) * 13;
     container-type: inline-size;
   }
 
+  /* Blur-up: the 24px preview holds the frame until the real file decodes. */
+  .photo:has(img) {
+    background-image: var(--lqip, none);
+    background-size: cover;
+    background-position: center;
+  }
+
   .photo--rounded {
     border-radius: var(--r-lg);
   }
@@ -98,24 +122,35 @@ const angle = 26 + (seed % 5) * 13;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    animation: photo-in var(--dur-3) var(--ease) both;
+    opacity: 0;
+    transition: opacity var(--dur-3) var(--ease);
+  }
+  .photo[data-loaded] :global(img) { opacity: 1; }
+  /* If the load event fired before hydration, don't leave it blank. */
+  :global(html:not(.js)) .photo :global(img) { opacity: 1; }
+
+  .photo--parallax :global(img) {
+    height: 118%;
+    transform: translate3d(0, var(--shift, 0px), 0);
+    will-change: transform;
   }
 
-  @keyframes photo-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .photo__caption {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    padding: 2.5rem 0.9rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: linear-gradient(to top, rgb(10 8 7 / 0.72), transparent);
+    pointer-events: none;
   }
 
-  /* ---- Placeholder -------------------------------------------------------
-     Designed, not broken: a hatched plate carrying the alt text, so the
-     page still communicates what will be there. Replaced automatically the
-     moment a real file with this name lands in public/photo/.             */
-  .photo--empty {
-    border: 1px solid var(--line);
-  }
-  .photo--rounded.photo--empty {
-    border-radius: var(--r-lg);
-  }
+  /* ---- Placeholder ------------------------------------------------------ */
+  .photo--empty { border: 1px solid var(--line); }
+  .photo--rounded.photo--empty { border-radius: var(--r-lg); }
 
   .photo__ph {
     display: grid;
@@ -145,7 +180,6 @@ const angle = 26 + (seed % 5) * 13;
     font-size: var(--step--2);
     line-height: 1.4;
     color: var(--ink-3);
-    /* Long alt text must not push the icon out of a short slot. */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -171,21 +205,33 @@ const angle = 26 + (seed % 5) * 13;
     backdrop-filter: blur(3px);
   }
 
-  .photo__label-name {
-    color: var(--ink-2);
-    font-weight: 600;
-  }
+  .photo__label-name { color: var(--ink-2); font-weight: 600; }
+  .photo__label-note { opacity: 0.8; }
 
-  .photo__label-note {
-    opacity: 0.8;
-  }
-
-  /* Very small slots: drop the alt text, keep the icon and the file name. */
   @container (max-width: 11rem) {
     .photo__ph-alt { display: none; }
   }
 
+  /* On an inverted band the placeholder has to invert with it. */
+  :global(.section--ink) .photo--empty {
+    background: color-mix(in srgb, var(--ink-invert) 6%, transparent);
+    border-color: color-mix(in srgb, var(--ink-invert) 14%, transparent);
+  }
+  :global(.section--ink) .photo__ph,
+  :global(.section--ink) .photo__ph-alt {
+    color: color-mix(in srgb, var(--ink-invert) 62%, transparent);
+  }
+  :global(.section--ink) .photo__label {
+    background: color-mix(in srgb, #000 40%, transparent);
+    border-block-start-color: color-mix(in srgb, var(--ink-invert) 14%, transparent);
+    color: color-mix(in srgb, var(--ink-invert) 66%, transparent);
+  }
+  :global(.section--ink) .photo__label-name {
+    color: color-mix(in srgb, var(--ink-invert) 84%, transparent);
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .photo :global(img) { animation: none; }
+    .photo :global(img) { transition: none; opacity: 1; }
+    .photo--parallax :global(img) { height: 100%; transform: none; }
   }
 </style>

@@ -1,4 +1,6 @@
 ---
+import { ClientRouter } from 'astro:transitions';
+
 import '~/styles/fonts.css';
 import '~/styles/tokens.css';
 import '~/styles/base.css';
@@ -24,6 +26,8 @@ interface Props {
   /** Hides the persistent mobile CTA on pages that already are the form. */
   hideStickyCta?: boolean;
   bodyClass?: string;
+  /** 'ink' = the first screen is dark, so the header sits on it unstyled. */
+  topTheme?: 'paper' | 'ink';
 }
 
 const {
@@ -36,6 +40,7 @@ const {
   ogImage = '/og-default.svg',
   hideStickyCta = false,
   bodyClass = '',
+  topTheme = 'paper',
 } = Astro.props;
 
 const origin = Astro.site?.toString().replace(/\/$/, '') ?? '';
@@ -94,6 +99,10 @@ const nodes = [
 
     <script type="application/ld+json" set:html={graph(nodes)} is:inline />
 
+    <!-- Cross-page navigation without the white flash. Degrades to normal
+         full page loads where the API is unsupported. -->
+    <ClientRouter />
+
     <slot name="head" />
   </head>
 
@@ -101,6 +110,7 @@ const nodes = [
     class={bodyClass}
     data-review={SHOW_UNCONFIRMED ? 'true' : undefined}
     data-metrika={site.metrikaId || undefined}
+    data-top={topTheme}
   >
     <a class="skip-link" href="#main">К основному содержанию</a>
 

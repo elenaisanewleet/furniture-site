@@ -52,8 +52,12 @@ export function track(name: EventName, params: Record<string, string | number> =
   if (import.meta.env.DEV) console.debug('[track]', name, params);
 }
 
-/** Wires every element carrying `data-track`. */
+let declarativeBound = false;
+
+/** Wires every element carrying `data-track`. Delegated, so bind once. */
 export function bindDeclarative() {
+  if (declarativeBound) return;
+  declarativeBound = true;
   document.addEventListener(
     'click',
     (e) => {

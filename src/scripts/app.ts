@@ -1,21 +1,62 @@
 import { bindDeclarative, track } from './analytics';
 import { initTaskForms } from './task-form';
 import { initBeforeAfter } from './before-after';
+import { initPartFinder } from './part-finder';
+
+/**
+ * Client wiring.
+ *
+ * With view transitions the document body is swapped in place and module
+ * scripts are NOT re-evaluated, so `boot()` runs again on every navigation.
+ * That makes idempotence a hard requirement, and there are two kinds of it:
+ *
+ *   • listeners on elements — the elements are replaced on navigation, so
+ *     each new one is wired once, guarded by `wire()`;
+ *   • listeners on window/document — those survive navigation, so they are
+ *     attached exactly once and re-query the DOM when they fire.
+ */
+
+/** Returns false if this element was already wired by an earlier boot. */
+function wire(el: HTMLElement, key: string): boolean {
+  const flag = `wired${key}`;
+  if (el.dataset[flag]) return false;
+  el.dataset[flag] = '1';
+  return true;
+}
+
+let globalsBound = false;
 
 /* ---------------------------------------------------------------- header */
 
-function header() {
-  const el = document.querySelector<HTMLElement>('[data-header]');
-  if (!el) return;
-  const onScroll = () => el.classList.toggle('is-stuck', window.scrollY > 8);
-  onScroll();
-  addEventListener('scroll', onScroll, { passive: true });
+function headerAndScroll() {
+  const sync = () => {
+    const y = window.scrollY;
+
+    const hdr = document.querySelector<HTMLElement>('[data-header]');
+    if (hdr) hdr.classList.toggle('is-stuck', y > 8);
+
+    const bar = document.querySelector<HTMLElement>('[data-sticky-cta]');
+    if (bar) {
+      const past = y > window.innerHeight * 0.55;
+      const nearBottom =
+        y + window.innerHeight > document.documentElement.scrollHeight - 240;
+      const down = y > lastY;
+      bar.dataset.visible = String(past && (!down || nearBottom));
+    }
+
+    lastY = y;
+  };
+
+  let lastY = window.scrollY;
+  sync();
+  if (globalsBound) return;
+  addEventListener('scroll', sync, { passive: true });
 }
 
 function mobileNav() {
   const burger = document.querySelector<HTMLButtonElement>('[data-burger]');
   const nav = document.querySelector<HTMLElement>('[data-mobile-nav]');
-  if (!burger || !nav) return;
+  if (!burger || !nav || !wire(burger, 'Nav')) return;
 
   const set = (open: boolean) => {
     burger.setAttribute('aria-expanded', String(open));
@@ -37,7 +78,7 @@ function mobileNav() {
 function megaMenu() {
   const btn = document.querySelector<HTMLButtonElement>('[data-disclosure]');
   const menu = document.querySelector<HTMLElement>('[data-menu]');
-  if (!btn || !menu) return;
+  if (!btn || !menu || !wire(btn, 'Mega')) return;
 
   let closeTimer = 0;
   const set = (open: boolean) => {
@@ -64,38 +105,15 @@ function megaMenu() {
   });
 }
 
-/* ------------------------------------------------------------ sticky CTA */
-
-function stickyCta() {
-  const bar = document.querySelector<HTMLElement>('[data-sticky-cta]');
-  if (!bar) return;
-
-  let last = window.scrollY;
-  const update = () => {
-    const y = window.scrollY;
-    const down = y > last;
-    last = y;
-    // Appears once the hero is behind you; retreats while scrolling down so
-    // it never fights with the content being read.
-    const past = y > window.innerHeight * 0.55;
-    const nearBottom =
-      y + window.innerHeight > document.documentElement.scrollHeight - 240;
-    bar.dataset.visible = String(past && (!down || nearBottom));
-  };
-  update();
-  addEventListener('scroll', update, { passive: true });
-}
-
 /* --------------------------------------------------------------- dialog */
 
 function taskDialog() {
   const dlg = document.querySelector<HTMLDialogElement>('[data-task-dialog]');
-  const openers = document.querySelectorAll<HTMLElement>('[data-open-task]');
-  if (!openers.length) return;
-
   const usable = dlg && typeof dlg.showModal === 'function';
 
-  openers.forEach((btn) => {
+  document.querySelectorAll<HTMLElement>('[data-open-task]').forEach((btn) => {
+    if (!wire(btn, 'Open')) return;
+
     if (!usable) {
       // No <dialog> support: send them to the standalone page instead.
       const a = document.createElement('a');
@@ -125,12 +143,11 @@ function taskDialog() {
       }
       dlg!.showModal();
       document.body.style.overflow = 'hidden';
-      // Focus the panel, not the first radio — less jarring on open.
       dlg!.querySelector<HTMLElement>('.tdlg__title')?.focus();
     });
   });
 
-  if (!usable) return;
+  if (!usable || !wire(dlg!, 'Dlg')) return;
 
   dlg!.querySelectorAll('[data-close-task]').forEach((b) =>
     b.addEventListener('click', () => dlg!.close())
@@ -150,7 +167,7 @@ function quickIntake() {
   const drop = document.querySelector<HTMLElement>('[data-quick-drop]');
   const input = document.querySelector<HTMLInputElement>('[data-quick-intake]');
   const dlg = document.querySelector<HTMLDialogElement>('[data-task-dialog]');
-  if (!input) return;
+  if (!input || !wire(input, 'Intake')) return;
 
   const handoff = (list: FileList | null) => {
     if (!list?.length) return;
@@ -160,7 +177,6 @@ function quickIntake() {
     const target = form?.querySelector<HTMLInputElement>('[data-files="photos"]');
 
     if (!form || !target || typeof dlg?.showModal !== 'function') {
-      // No dialog available — carry on to the standalone page.
       location.href = '/pokazat-zadachu/';
       return;
     }
@@ -196,15 +212,71 @@ function quickIntake() {
   });
 }
 
+/* ------------------------------------------------------------- polish */
+
+/**
+ * Primary actions drift a few pixels toward the cursor. Pointer-fine only —
+ * on touch it would just cause jitter — and disabled under reduced motion.
+ */
+function magnetics() {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  document.querySelectorAll<HTMLElement>('[data-magnet]').forEach((el) => {
+    if (!wire(el, 'Magnet')) return;
+    const reset = () => {
+      el.style.setProperty('--mx', '0px');
+      el.style.setProperty('--my', '0px');
+    };
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+      const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+      el.style.setProperty('--mx', `${(dx * 12).toFixed(1)}px`);
+      el.style.setProperty('--my', `${(dy * 8).toFixed(1)}px`);
+    });
+    el.addEventListener('pointerleave', reset);
+    reset();
+  });
+}
+
+/** Slow counter-drift on large images, from one rAF-throttled listener. */
+function parallax() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    const vh = window.innerHeight;
+    document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < -200 || r.top > vh + 200) return;
+      const progress = (r.top + r.height / 2 - vh / 2) / vh;
+      el.style.setProperty('--shift', `${(progress * -38).toFixed(1)}px`);
+    });
+  };
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  };
+  update();
+  if (globalsBound) return;
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll, { passive: true });
+}
+
 /* --------------------------------------------------------------- reveal */
 
 function reveal() {
-  const items = document.querySelectorAll<HTMLElement>('.reveal');
+  const items = document.querySelectorAll<HTMLElement>('.reveal, .reveal-up, .reveal-wipe');
   if (!items.length) return;
+
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     items.forEach((i) => i.classList.add('is-in'));
     return;
   }
+
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((en) => {
@@ -215,22 +287,27 @@ function reveal() {
     },
     { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
   );
-  items.forEach((i) => io.observe(i));
+  items.forEach((i) => {
+    if (wire(i, 'Reveal')) io.observe(i);
+  });
 }
 
 /* --------------------------------------------------------------- boot */
 
 function boot() {
   bindDeclarative();
-  header();
+  headerAndScroll();
   mobileNav();
   megaMenu();
-  stickyCta();
   taskDialog();
   quickIntake();
+  magnetics();
+  parallax();
   reveal();
   initTaskForms();
   initBeforeAfter();
+  initPartFinder();
+  globalsBound = true;
 }
 
 if (document.readyState === 'loading') {
@@ -238,3 +315,7 @@ if (document.readyState === 'loading') {
 } else {
   boot();
 }
+
+// Fires on the initial load too when the view-transition router is active,
+// which is why every step above must be safe to run more than once.
+document.addEventListener('astro:page-load', boot);

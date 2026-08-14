@@ -14,7 +14,6 @@ import { primaryContact } from '~/data/site';
 import { isPublic } from '~/lib/facts';
 import { faqPage } from '~/lib/schema';
 
-// Home shows the four hubs, in the order a visitor most likely needs them.
 const GROUP_ORDER = ['mebel', 'remont', 'furnitura', 'detali'];
 const services = (await getCollection('services'))
   .filter((s) => isPublic(s.data.status) && !s.data.parent)
@@ -32,32 +31,52 @@ const faqAll = (await getCollection('faq'))
   .filter((f) => isPublic(f.data.status))
   .sort((a, b) => a.data.order - b.data.order)
   .slice(0, 6);
-
 const faqItems = faqAll.map((f) => ({ q: f.data.q, a: f.data.a, status: f.data.status }));
 
-// Concrete reasons only — no "quality", no "individual approach" (brief §09).
+/** The phrases people actually use. Runs as a marquee under the hero. */
+const SAID = [
+  'дверца перекосилась',
+  'вот эта штука отвалилась',
+  'рельса от ящика',
+  'не знаю, как называется',
+  'нужна такая же деталь',
+  'ящик выпадает',
+  'шкаф в нишу, но там труба',
+  'хочу как на картинке',
+  'ручка вырвалась с куском',
+  'полка провисла',
+  'петлю не могу найти',
+  'кухня не встаёт по размеру',
+];
+
 const REASONS = [
   {
+    n: '01',
     title: 'Задачу можно показать фотографией',
     text: 'Не нужно знать, как называется деталь, механизм или тип петли. Снимите — дальше наша забота.',
   },
   {
+    n: '02',
     title: 'Беремся за отдельную деталь',
     text: 'Можно прийти с одной дверцей, одной полкой или одной сломанной направляющей. Заказывать мебель целиком не обязательно.',
   },
   {
-    title: 'Ремонт и переделка вместо покупки',
+    n: '03',
+    title: 'Ремонт вместо покупки',
     text: 'Иногда корпус целый, а изношена только фурнитура. Тогда менять всю мебель незачем — и мы об этом скажем.',
   },
   {
-    title: 'Разговор без мебельных терминов',
+    n: '04',
+    title: 'Разговор без терминов',
     text: 'Объясняем на нормальном языке. Если что-то непонятно по фото — спросим, а не будем гадать.',
   },
   {
+    n: '05',
     title: 'Небольшая мастерская напрямую',
     text: 'Задача не идёт через менеджера, дизайнера и отдел продаж. Вы разговариваете с теми, кто её и делает.',
   },
   {
+    n: '06',
     title: 'Нестандартное — это нормально',
     text: 'Кривая стена, труба в углу, скошенный потолок, размер, которого не бывает в магазине. Такие задачи интереснее типовых.',
   },
@@ -68,28 +87,39 @@ const REASONS = [
   title="Мебель на заказ, ремонт и фурнитура в Ульяновске"
   description="Мебель на заказ, ремонт, переделка и нестандартные детали в Ульяновске. Не знаете, как называется деталь? Просто сфотографируйте — посмотрим, что можно сделать."
   canonical="/"
+  topTheme="ink"
   schema={[faqPage(faqItems.map(({ q, a }) => ({ q, a })))].filter(Boolean)}
 >
-  <!-- ================================================= 01 HERO -->
-  <section class="hero">
+  <!-- ============================================================ 01 HERO -->
+  <section class="hero section--ink grain">
     <div class="container hero__inner">
       <div class="hero__copy">
+        <p class="hero__tag tag">Мастерская · Ульяновская область</p>
+
         <h1 class="hero__title">
           Покажите, что нужно&nbsp;сделать.
           <span>С остальным разберёмся.</span>
         </h1>
 
         <p class="hero__sub">
-          Мебель на заказ, ремонт, переделка и нестандартные детали
-          в&nbsp;Ульяновске. Не нужно знать названия деталей, тип механизма
-          и точные размеры — достаточно фотографии.
+          Мебель на заказ, ремонт, переделка и нестандартные детали.
+          Не нужно знать названия деталей, тип механизма и точные размеры —
+          достаточно фотографии.
         </p>
 
         <div class="hero__actions">
-          <button class="btn btn--accent btn--lg" type="button" data-open-task data-cta="hero">
+          <button
+            class="btn btn--accent btn--lg btn--magnet"
+            type="button"
+            data-open-task
+            data-cta="hero"
+            data-magnet
+          >
             Показать задачу
           </button>
-          <a class="btn btn--ghost btn--lg" href="/proekty/">Посмотреть работы</a>
+          <a class="btn btn--on-ink-ghost btn--lg" href="/opredelitel/">
+            Определитель детали
+          </a>
         </div>
 
         {
@@ -99,7 +129,6 @@ const REASONS = [
               <a href={`tel:${primaryContact.tel}`} data-track="phone_click" data-track-where="hero">
                 {primaryContact.phone}
               </a>
-              <span>{primaryContact.note}</span>
             </p>
           )
         }
@@ -108,23 +137,43 @@ const REASONS = [
       <div class="hero__media">
         <Photo
           name="hero-workshop"
-          alt="Мастерская: раскроенные детали корпусной мебели на верстаке"
-          brief="Небольшая мебельная мастерская изнутри. Верстак, раскроенные детали ЛДСП, ручной инструмент, стружка. Дневной свет из окна, документальная съёмка 35 мм, без постановки и без глянца."
+          alt="Ручные пилы и струбцины на стене мастерской"
           ratio="4/5"
           priority
-          sizes="(min-width: 68rem) 42vw, 100vw"
-        />
+          parallax
+          rounded={false}
+          sizes="(min-width: 68rem) 44vw, 100vw"
+        brief="Ручные пилы, лучковая пила и струбцины висят рядком на стене из сосновой вагонки. Рядом — рабочая куртка на крючке. Тёплый свет лампы, вертикальный кадр. Реальная мастерская при частном доме, не цех."
+          />
+        <div class="hero__frame" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- The words people actually use, on repeat. -->
+    <div class="marquee hero__marquee" aria-hidden="true">
+      <div class="marquee__track">
+        {
+          [0, 1].map(() => (
+            <div class="hero__said-group">
+              {SAID.map((s) => (
+                <span class="hero__said">
+                  «{s}»<i>·</i>
+                </span>
+              ))}
+            </div>
+          ))
+        }
       </div>
     </div>
   </section>
 
-  <!-- ================================================= 02 QUICK INTAKE -->
+  <!-- ================================================== 02 QUICK INTAKE -->
   <PhotoIntake />
 
-  <!-- ================================================= MODEL B -->
+  <!-- ============================================================ MODEL B -->
   <ProblemGrid />
 
-  <!-- ================================================= 03 SERVICES -->
+  <!-- ======================================================= 03 SERVICES -->
   {
     services.length > 0 && (
       <section class="section services">
@@ -138,15 +187,17 @@ const REASONS = [
             </p>
           </div>
 
-          <div class="grid grid--2 services__grid">
-            {services.map((s) => (
-              <ServiceCard
-                href={`/${s.id}/`}
-                title={s.data.title}
-                text={s.data.short}
-                image={s.data.hero}
-                size="lg"
-              />
+          <div class="grid grid--2 stagger">
+            {services.map((s, i) => (
+              <div class="reveal-up" style={`--i:${i}`}>
+                <ServiceCard
+                  href={`/${s.id}/`}
+                  title={s.data.title}
+                  text={s.data.short}
+                  image={s.data.hero}
+                  size="lg"
+                />
+              </div>
             ))}
           </div>
 
@@ -158,53 +209,126 @@ const REASONS = [
     )
   }
 
-  <!-- ================================================= 04 NAME IT -->
+  <!-- ========================================================= 04 NAME IT -->
   <NameItBlock />
 
-  <!-- ================================================= 05 PROJECTS -->
-  {
-    projects.length > 0 && (
-      <section class="section">
-        <div class="container">
-          <div class="section-head section-head--row">
-            <div>
-              <p class="eyebrow">Работы</p>
-              <h2>Как выглядит решённая задача</h2>
-            </div>
-            <a class="link" href="/proekty/">Все работы →</a>
-          </div>
-
-          <div class="grid grid--3">
-            {projects.map((p) => (
-              <ProjectCard
-                href={`/proekty/${p.id}/`}
-                title={p.data.title}
-                summary={p.data.summary}
-                kind={p.data.kind}
-                placeholder={p.data.placeholder}
-                image={p.data.hero}
-              />
-            ))}
-          </div>
+  <!-- =================================================== ЖЕЛЕЗО / ПРУФ -->
+  <section class="section stock">
+    <div class="container">
+      <div class="stock__head">
+        <div>
+          <p class="eyebrow">Почему это вообще работает</p>
+          <h2>Половина задач решается тем, что нужная железка уже лежит в ящике</h2>
         </div>
-      </section>
-    )
-  }
+        <p class="stock__text">
+          Мебель редко ломается целиком. Обычно изнашивается или теряется одна
+          мелочь — петля, направляющая, эксцентрик, полкодержатель. Их
+          неудобно искать поштучно и почти невозможно описать словами
+          по телефону. Поэтому мы просим фотографию, а не название.
+        </p>
+      </div>
 
-  <!-- ================================================= 07 PROCESS -->
-  <Steps tone="sunken" />
+      <div class="stock__grid">
+        <div class="stock__a reveal-wipe">
+          <Photo
+            name="workshop-fasteners-shelf"
+            alt="Полка с банками и коробками сортированного крепежа"
+            ratio="4/3"
+            caption="крепёж разобран по банкам"
+            sizes="(min-width: 62rem) 46vw, 100vw"
+          brief="Полка с сортированным крепежом крупно: стеклянные банки, обрезанные пластиковые вёдра, контейнеры и коробки с саморезами, болтами, уголками. Главный кадр сайта — доказательство, что нужная железка найдётся."
+          />
+        </div>
+        <div class="stock__b reveal-wipe">
+          <Photo
+            name="hardware-tray"
+            alt="Тиски и лоток с разнообразным крепежом"
+            ratio="4/5"
+            caption="то, что обычно называют «вот эта штука»"
+            sizes="(min-width: 62rem) 28vw, 50vw"
+          brief="Зелёный пластиковый лоток с перемешанным крепежом — саморезы, уголки, пластины — стоит на верстаке рядом со слесарными тисками, крашенными синим."
+          />
+        </div>
+        <div class="stock__c reveal-wipe">
+          <Photo
+            name="workshop-storage"
+            alt="Стеллаж мастерской с разобранными по коробкам деталями"
+            ratio="4/5"
+            caption="мастерская, не склад"
+            sizes="(min-width: 62rem) 24vw, 50vw"
+          brief="Стеллаж от пола до потолка: картонные коробки с рукописными номерами, мешки, пластиковые ящики, банки. Плотно, но по местам."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <!-- ================================================= 08 MASTER -->
-  <section class="section master">
+  <!-- ======================================================= МАСТЕРСКАЯ -->
+  <section class="section section--sunken shop">
+    <div class="container">
+      <div class="section-head section-head--row">
+        <div>
+          <p class="eyebrow">Мастерская</p>
+          <h2>Где всё это происходит</h2>
+        </div>
+        <a class="link" href="/o-mastere/">Заглянуть внутрь →</a>
+      </div>
+
+      <div class="shop__grid">
+        <div class="shop__1 reveal-up">
+          <Photo
+            name="workshop-room"
+            alt="Общий вид мастерской: верстаки, торцовочная пила, стеллажи"
+            ratio="4/5"
+            caption="общий вид"
+            sizes="(min-width: 62rem) 32vw, 50vw"
+          brief="Общий вид небольшой мастерской: самодельные верстаки вдоль стен, торцовочная пила на деревянном столе, полки с ящиками, бетонный пол, стены из сосновой вагонки. Тёплый свет лампы."
+          />
+        </div>
+        <div class="shop__2 reveal-up" style="--i:1">
+          <Photo
+            name="eq-drill-press"
+            alt="Сверлильный станок в мастерской"
+            ratio="4/5"
+            caption="сверлильный станок"
+            sizes="(min-width: 62rem) 32vw, 50vw"
+          brief="Настольный сверлильный станок, старый, крашеный, на деревянной подставке у стены из вагонки."
+          />
+        </div>
+        <div class="shop__3 reveal-up" style="--i:2">
+          <Photo
+            name="workshop-bench"
+            alt="Верстак с сортированным крепежом"
+            ratio="4/3"
+            caption="верстак"
+            sizes="(min-width: 62rem) 32vw, 100vw"
+          brief="Длинный самодельный верстак: толстая доска на металлическом каркасе, на ней и под ней — стеклянные банки, пластиковые контейнеры и жестянки с крепежом."
+          />
+        </div>
+      </div>
+
+      <p class="shop__note">
+        Фотографии настоящие. Это не студийная съёмка и не шоурум —
+        обычная рабочая мастерская, в которой есть и дерево, и металл.
+      </p>
+    </div>
+  </section>
+
+  <!-- ======================================================== 07 PROCESS -->
+  <Steps />
+
+  <!-- ========================================================= 08 MASTER -->
+  <section class="section master section--ink grain">
     <div class="container master__inner">
       <div class="master__media">
         <Photo
           name="master-hands"
-          alt="Руки мастера размечают деталь перед сверлением"
-          brief="Руки мастера с карандашом и угольником размечают деталь ЛДСП на верстаке. Лицо не в кадре. Рабочие руки, стружка, дневной свет. Документально, 50 мм."
+          alt="Руки мастера разбирают коробку с мебельной фурнитурой"
           ratio="4/5"
-          sizes="(min-width: 62rem) 40vw, 100vw"
-        />
+          rounded={false}
+          sizes="(min-width: 62rem) 38vw, 100vw"
+        brief="Руки мастера держат мебельную деталь над открытой картонной коробкой с такими же. Лицо не в кадре, видно только руки и рукава. Тёплый свет, верстак."
+          />
       </div>
 
       <div class="master__copy">
@@ -220,26 +344,27 @@ const REASONS = [
           словами. Дальше задача уходит мастеру уже в понятном виде.
         </p>
         <p class="master__slot">
-          Здесь будет фотография и рассказ о мастере — как только он их
-          утвердит. Придумывать за него мы не стали.
+          Портрет мастера и рассказ о нём появятся здесь, когда он сам решит,
+          что публиковать. Придумывать за него мы не стали.
         </p>
-        <a class="btn btn--ghost" href="/o-mastere/">О мастерской</a>
+        <a class="btn btn--on-ink" href="/o-mastere/">Заглянуть в мастерскую</a>
       </div>
     </div>
   </section>
 
-  <!-- ================================================= 09 WHY -->
-  <section class="section section--sunken">
+  <!-- ============================================================ 09 WHY -->
+  <section class="section">
     <div class="container">
       <div class="section-head">
         <p class="eyebrow">Почему сюда</p>
         <h2>Зачем к нам обращаются</h2>
       </div>
 
-      <ul class="reasons">
+      <ul class="reasons stagger">
         {
-          REASONS.map((r) => (
-            <li class="reasons__item reveal">
+          REASONS.map((r, i) => (
+            <li class="reasons__item reveal-up" style={`--i:${i}`}>
+              <span class="idx">{r.n}</span>
               <h3>{r.title}</h3>
               <p>{r.text}</p>
             </li>
@@ -249,7 +374,7 @@ const REASONS = [
     </div>
   </section>
 
-  <!-- ================================================= 10 FAQ -->
+  <!-- ============================================================ 10 FAQ -->
   {
     faqItems.length > 0 && (
       <FaqList
@@ -273,36 +398,40 @@ const REASONS = [
 </Base>
 
 <style>
-  /* ---- Hero ---- */
+  /* ===================================================== HERO =========== */
   .hero {
-    padding-block: var(--sp-7) var(--sp-8);
+    position: relative;
+    /* Header height is added back here — see body[data-top='ink'] in base.css */
+    padding-block-start: calc(var(--header-h) + var(--sp-6));
+    overflow: hidden;
   }
 
   .hero__inner {
     display: grid;
     gap: var(--sp-6);
     align-items: center;
+    padding-block-end: var(--sp-8);
   }
 
-  /* On phones the message and the CTA come first; the image follows. */
-  .hero__media { margin-block-start: var(--sp-2); }
+  .hero__tag { margin-block-end: var(--sp-5); }
 
   .hero__title {
     font-size: var(--display);
     line-height: var(--lh-display);
     letter-spacing: var(--tracking-display);
     font-weight: 650;
+    color: var(--ink-invert);
   }
   .hero__title span {
     display: block;
-    color: var(--ink-3);
+    color: color-mix(in srgb, var(--ink-invert) 46%, transparent);
   }
 
   .hero__sub {
     margin-block-start: var(--sp-5);
     font-size: var(--step-1);
     line-height: 1.5;
-    color: var(--ink-2);
+    color: color-mix(in srgb, var(--ink-invert) 74%, transparent);
     max-width: 44ch;
   }
 
@@ -317,26 +446,52 @@ const REASONS = [
   .hero__phone {
     margin-block-start: var(--sp-5);
     font-size: var(--step--1);
-    color: var(--ink-3);
+    color: color-mix(in srgb, var(--ink-invert) 60%, transparent);
   }
   .hero__phone a {
     font-weight: 650;
-    color: var(--ink);
+    color: var(--ink-invert);
     white-space: nowrap;
   }
-  .hero__phone span {
-    display: block;
-    margin-block-start: 0.25rem;
-    max-width: 42ch;
+
+  .hero__media { position: relative; }
+  .hero__media :global(.photo) {
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-3);
+  }
+  /* Hairline offset frame — cheap, and reads as considered rather than flat. */
+  .hero__frame {
+    position: absolute;
+    inset: 0;
+    translate: 0.85rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: var(--r-lg);
+    z-index: -1;
   }
 
+  /* ---- Marquee ---- */
+  .hero__marquee {
+    border-block-start: 1px solid color-mix(in srgb, var(--ink-invert) 14%, transparent);
+    padding-block: var(--sp-4);
+  }
+  .hero__said-group { display: flex; }
+  .hero__said {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.4rem;
+    padding-inline-end: 1.4rem;
+    white-space: nowrap;
+    font-size: var(--step-1);
+    color: color-mix(in srgb, var(--ink-invert) 44%, transparent);
+  }
+  .hero__said i { color: var(--accent); font-style: normal; }
 
+  /* ================================================== SERVICES ========== */
   .services__all {
     margin-block-start: var(--sp-5);
     font-size: var(--step--1);
   }
 
-  /* ---- Section head with a trailing link ---- */
   .section-head--row {
     display: flex;
     flex-wrap: wrap;
@@ -346,27 +501,71 @@ const REASONS = [
     max-width: none;
   }
 
-  /* ---- Master ---- */
+  /* ===================================================== STOCK ========== */
+  .stock__head {
+    display: grid;
+    gap: var(--sp-5);
+    margin-block-end: var(--sp-7);
+  }
+  .stock__head h2 {
+    font-size: var(--step-4);
+    max-width: 18ch;
+    margin-block-start: var(--sp-4);
+  }
+  .stock__text {
+    color: var(--ink-2);
+    line-height: 1.65;
+    max-width: 52ch;
+  }
+
+  .stock__grid {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  /* ===================================================== SHOP =========== */
+  .shop__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-4);
+  }
+  .shop__3 { grid-column: span 2; }
+
+  .shop__note {
+    margin-block-start: var(--sp-5);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    max-width: 54ch;
+  }
+
+  /* ===================================================== MASTER ========= */
   .master__inner {
     display: grid;
     gap: var(--sp-6);
     align-items: center;
   }
+  .master__media :global(.photo) { border-radius: var(--r-lg); }
 
   .master__copy { display: grid; gap: var(--sp-4); justify-items: start; }
-  .master__copy h2 { font-size: var(--step-4); }
-  .master__copy p { color: var(--ink-2); max-width: 48ch; line-height: 1.6; }
-  .master__lede { font-size: var(--step-1); color: var(--ink) !important; }
-
+  .master__copy h2 { font-size: var(--step-4); color: var(--ink-invert); }
+  .master__copy p {
+    color: color-mix(in srgb, var(--ink-invert) 72%, transparent);
+    max-width: 48ch;
+    line-height: 1.65;
+  }
+  .master__lede {
+    font-size: var(--step-1);
+    color: var(--ink-invert) !important;
+  }
   .master__slot {
     padding: var(--sp-4);
-    background: var(--paper-sunken);
+    background: color-mix(in srgb, var(--ink-invert) 6%, transparent);
     border-inline-start: 2px solid var(--accent);
     border-radius: var(--r-sm);
     font-size: var(--step--1);
   }
 
-  /* ---- Reasons ---- */
+  /* ==================================================== REASONS ========= */
   .reasons {
     display: grid;
     gap: 0;
@@ -374,14 +573,13 @@ const REASONS = [
     margin: 0;
     padding: 0;
   }
-
   .reasons__item {
     padding-block: var(--sp-5);
     border-block-start: 1px solid var(--line);
   }
   .reasons__item h3 {
     font-size: var(--step-1);
-    margin-block-end: 0.4rem;
+    margin-block: 0.5rem 0.4rem;
   }
   .reasons__item p {
     color: var(--ink-2);
@@ -390,28 +588,52 @@ const REASONS = [
     max-width: 46ch;
   }
 
+  /* ================================================ BREAKPOINTS ========= */
   @media (min-width: 46rem) {
     .reasons {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       column-gap: var(--sp-7);
     }
+    .stock__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .stock__a { grid-column: span 2; }
   }
-  @media (min-width: 72rem) {
-    .reasons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  @media (min-width: 62rem) {
+    .shop__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .shop__3 { grid-column: auto; align-self: center; }
   }
 
   @media (min-width: 62rem) {
     .master__inner {
-      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
       gap: var(--sp-8);
     }
+    .stock__head {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--sp-8);
+    }
+    .stock__grid {
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--sp-5);
+    }
+    .stock__a { grid-column: 1 / 8; }
+    .stock__b { grid-column: 8 / 13; align-self: end; }
+    .stock__c { grid-column: 1 / 5; margin-block-start: calc(var(--sp-5) * -3); }
+  }
+
+  @media (min-width: 72rem) {
+    .reasons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   }
 
   @media (min-width: 68rem) {
-    .hero { padding-block: var(--sp-9) var(--sp-10); }
+    .hero { padding-block-start: calc(var(--header-h) + var(--sp-7)); }
     .hero__inner {
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
       gap: var(--sp-9);
+      padding-block-end: var(--sp-9);
     }
     .hero__actions .btn { flex: 0 1 auto; }
   }

@@ -512,3 +512,152 @@ a {
 @media print {
   .no-print { display: none !important; }
 }
+
+
+/* =========================================================================
+   Texture, motion and editorial utilities (v2)
+   ========================================================================= */
+
+/* ---- Film grain --------------------------------------------------------
+   A 160px tile at low opacity. Costs 6 KB and stops large flat dark areas
+   from looking like a flat CSS colour behind the photographs.            */
+.grain {
+  position: relative;
+  isolation: isolate;
+}
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: url('/noise.png');
+  background-size: 160px 160px;
+  opacity: 0.055;
+  mix-blend-mode: overlay;
+}
+.grain > * { position: relative; z-index: 2; }
+
+.section--ink.grain::after { opacity: 0.07; }
+
+/* ---- Full-bleed --------------------------------------------------------- */
+.bleed {
+  width: 100vw;
+  max-width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* ---- Editorial index numbers -------------------------------------------- */
+.idx {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.06em;
+  color: var(--accent-ink);
+}
+.section--ink .idx { color: var(--accent-on-ink); }
+
+/* ---- Hairline label ------------------------------------------------------ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.24rem 0.65rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.section--ink .tag {
+  border-color: color-mix(in srgb, var(--ink-invert) 26%, transparent);
+  color: color-mix(in srgb, var(--ink-invert) 78%, transparent);
+}
+
+/* ---- Marquee -------------------------------------------------------------
+   The phrases people actually use. Duplicated once so the loop is seamless;
+   paused on hover and inert under reduced motion.                        */
+.marquee {
+  --speed: 46s;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee__track {
+  display: flex;
+  width: max-content;
+  gap: 0;
+  animation: marquee var(--speed) linear infinite;
+}
+.marquee:hover .marquee__track { animation-play-state: paused; }
+@keyframes marquee {
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee { overflow-x: auto; }
+  .marquee__track { animation: none; }
+}
+
+/* ---- Reveal variants ----------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(22px);
+    transition:
+      opacity var(--dur-4) var(--ease),
+      transform var(--dur-4) var(--ease);
+  }
+  .reveal-up.is-in { opacity: 1; transform: none; }
+
+  /* Image wipes in from its own edge rather than fading. */
+  .reveal-wipe {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path var(--dur-4) var(--ease);
+  }
+  .reveal-wipe.is-in { clip-path: inset(0 0 0 0); }
+
+  html:not(.js) :is(.reveal-up, .reveal-wipe) {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+
+  /* Stagger children of a revealed group. */
+  .stagger > * { transition-delay: calc(var(--i, 0) * 70ms); }
+}
+
+/* ---- Magnetic / pressable primary action --------------------------------- */
+.btn--magnet {
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition:
+    transform var(--dur-2) var(--ease),
+    background-color var(--dur-2) var(--ease),
+    color var(--dur-2) var(--ease),
+    border-color var(--dur-2) var(--ease),
+    box-shadow var(--dur-2) var(--ease);
+}
+.btn--magnet:hover { transform: translate3d(var(--mx, 0px), var(--my, 0px), 0); }
+@media (prefers-reduced-motion: reduce), (pointer: coarse) {
+  .btn--magnet { transform: none !important; }
+}
+
+/* ---- View transitions ----------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out 180ms var(--ease-in-out) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 260ms var(--ease) both;
+  }
+  @keyframes vt-out { to { opacity: 0; } }
+  @keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+}
+
+
+/* -------------------------------------------------------------------------
+   Dark first screen: pull the content up so the hero runs behind the sticky
+   header. The section itself adds the header height back as padding.
+   ------------------------------------------------------------------------- */
+body[data-top='ink'] main {
+  margin-block-start: calc(var(--header-h) * -1);
+}

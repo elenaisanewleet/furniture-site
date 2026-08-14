@@ -8,7 +8,8 @@
 export function initBeforeAfter() {
   document.querySelectorAll<HTMLElement>('[data-before-after]').forEach((el) => {
     const range = el.querySelector<HTMLInputElement>('input[type="range"]');
-    if (!range) return;
+    if (!range || el.dataset.ready) return;
+    el.dataset.ready = '1';
 
     const apply = () => el.style.setProperty('--split', `${range.value}%`);
     apply();

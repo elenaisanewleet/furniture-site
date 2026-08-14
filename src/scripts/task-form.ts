@@ -258,6 +258,15 @@ function setup(form: HTMLFormElement) {
       const res = await fetch(endpoint, { method: 'POST', body: fd });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+      // The lead id is what links the web form to the Telegram conversation.
+      let leadId: string | null = null;
+      try {
+        leadId = (await res.clone().json())?.lead_id ?? null;
+      } catch {
+        /* server answered without JSON — the lead still went through */
+      }
+      showHandoff(form, leadId);
+
       sent = true;
       track('form_completed', {
         type: (fd.get('request_type') as string) || 'none',
@@ -356,6 +365,32 @@ function setup(form: HTMLFormElement) {
 
 function fingerprint(f: File) {
   return `${f.name}:${f.size}:${f.lastModified}`;
+}
+
+/**
+ * Success screen extras: the reference number, and the Telegram deep link
+ * that hands this exact lead to the bot so the reply lands in the visitor's
+ * messenger instead of an unknown number calling them back.
+ */
+function showHandoff(form: HTMLFormElement, leadId: string | null) {
+  if (leadId) {
+    const box = form.querySelector<HTMLElement>('[data-lead-no]');
+    const slot = form.querySelector<HTMLElement>('[data-lead-id]');
+    if (slot) slot.textContent = leadId;
+    if (box) box.hidden = false;
+  }
+
+  const bot = form.dataset.tgBot;
+  const tgBlock = form.querySelector<HTMLElement>('[data-tg-block]');
+  const tgLink = form.querySelector<HTMLAnchorElement>('[data-tg-link]');
+  if (!bot || !tgBlock || !tgLink) return;
+
+  // Telegram start payloads allow [A-Za-z0-9_-] only.
+  const payload = (leadId ?? '').replace(/[^A-Za-z0-9_-]/g, '');
+  tgLink.href = payload
+    ? `https://t.me/${bot}?start=${payload}`
+    : `https://t.me/${bot}`;
+  tgBlock.hidden = false;
 }
 
 function setError(form: HTMLFormElement, key: string, msg: string) {

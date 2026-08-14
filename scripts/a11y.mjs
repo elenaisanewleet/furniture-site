@@ -26,7 +26,7 @@ const PAGES = [
   '/', '/uslugi/', '/mebel-na-zakaz/', '/remont-mebeli/', '/furnitura/',
   '/furnitura/petli/', '/detali-na-zakaz/', '/proekty/',
   '/proekty/vstroennyi-shkaf-v-nishu/', '/pokazat-zadachu/',
-  '/chto-sluchilos/', '/journal/', '/journal/provisla-dvertsa-shkafa/',
+  '/chto-sluchilos/', '/opredelitel/', '/journal/', '/journal/provisla-dvertsa-shkafa/',
   '/faq/', '/kontakty/', '/o-mastere/', '/404',
 ];
 

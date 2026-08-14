@@ -1,0 +1,167 @@
+---
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import PartFinder from '~/components/PartFinder.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import Photo from '~/components/Photo.astro';
+import { PARTS } from '~/data/parts';
+import { faqPage } from '~/lib/schema';
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Определитель детали', href: '/opredelitel/' },
+];
+
+// Each part doubles as a genuine long-tail question. Same content, so the
+// structured data matches what a visitor actually reads on the page.
+const schemaItems = PARTS.filter((p) => p.id !== 'ne-znayu').map((p) => ({
+  q: `Как называется деталь: ${p.said.toLowerCase()}?`,
+  a: `${p.term}. ${p.what}`,
+}));
+---
+
+<Base
+  title="Определитель мебельной детали"
+  description="Не знаете, как называется деталь? Выберите, где она стоит, или опишите своими словами — покажем, что это, что с ней обычно происходит и что сфотографировать."
+  canonical="/opredelitel/"
+  breadcrumb={trail}
+  schema={[faqPage(schemaItems)].filter(Boolean)}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="op-hero">
+    <div class="container op-hero__inner">
+      <div class="op-hero__copy">
+        <p class="eyebrow">Инструмент</p>
+        <h1>Что это за деталь?</h1>
+        <p class="lede">
+          Каталог фурнитуры наоборот. Не по названию механизма, а по тому,
+          где эта штука стоит и как вы бы её описали вслух.
+        </p>
+        <ul class="op-hero__how">
+          <li><span><b>Выберите место</b> — дверца, ящик, полка, низ мебели</span></li>
+          <li><span><b>Или напишите как умеете</b> — «рельса», «дверца висит»</span></li>
+          <li><span><b>Откройте карточку</b> — что это, что ломается, что снять</span></li>
+        </ul>
+      </div>
+
+      <div class="op-hero__media">
+        <Photo
+          name="hardware-mixed"
+          alt="Лоток с разнообразным мебельным крепежом"
+          ratio="1/1"
+          priority
+          sizes="(min-width: 62rem) 34vw, 100vw"
+          caption="здесь всё это уже разобрано"
+        brief="Лоток с разнообразным мебельным крепежом сверху, крупно. Оцинкованный металл, немного ржавчины, всё вперемешку."
+          />
+      </div>
+    </div>
+  </header>
+
+  <div class="container op-body">
+    <PartFinder />
+  </div>
+
+  <section class="op-honest">
+    <div class="container">
+      <div class="op-honest__box">
+        <h2>Если ничего не подошло</h2>
+        <p>
+          Это нормально и случается часто: мебельных деталей тысячи, а
+          у большинства нет бытового названия. Определитель нужен, чтобы
+          сэкономить вам время, а не чтобы вы обязательно нашли ответ сами.
+        </p>
+        <p>
+          Положите деталь на стол, рядом — линейку или монету, снимите с двух
+          сторон. Этого почти всегда достаточно.
+        </p>
+        <button class="btn btn--accent" type="button" data-open-task data-cta="opredelitel_honest" data-preset="part">
+          Показать деталь мастеру
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <ShowTask
+    tone="ink"
+    title="Нашли похожее — но не уверены?"
+    text="Сфотографируйте свою деталь: по снимку видно и тип, и размер, и то, цела ли посадка."
+    button="Показать деталь"
+    preset="part"
+  />
+</Base>
+
+<style>
+  .op-hero { padding-block: var(--sp-6) var(--sp-7); }
+
+  .op-hero__inner {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: center;
+  }
+
+  .op-hero__copy h1 {
+    font-size: var(--display-sm);
+    line-height: var(--lh-display);
+    margin-block: var(--sp-4) var(--sp-4);
+  }
+
+  .op-hero__how {
+    display: grid;
+    gap: 0.5rem;
+    margin-block-start: var(--sp-5);
+    padding: 0;
+    list-style: none;
+    counter-reset: how;
+  }
+  .op-hero__how li {
+    display: grid;
+    grid-template-columns: 1.6rem 1fr;
+    gap: 0.6rem;
+    align-items: baseline;
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    counter-increment: how;
+  }
+  .op-hero__how li::before {
+    content: counter(how);
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+  .op-hero__how b { color: var(--ink); font-weight: 650; }
+
+  .op-body { padding-block-end: var(--sp-8); }
+
+  .op-honest { padding-block-end: var(--section-y-sm); }
+  .op-honest__box {
+    display: grid;
+    gap: var(--sp-4);
+    justify-items: start;
+    padding: var(--sp-6);
+    background: var(--paper-sunken);
+    border-radius: var(--r-xl);
+    max-width: 46rem;
+  }
+  .op-honest__box h2 { font-size: var(--step-2); }
+  .op-honest__box p {
+    color: var(--ink-2);
+    line-height: 1.65;
+    max-width: 58ch;
+  }
+
+  @media (min-width: 62rem) {
+    .op-hero__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
+      gap: var(--sp-8);
+    }
+  }
+</style>

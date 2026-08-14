@@ -1,53 +1,22 @@
 ---
-import Photo from './Photo.astro';
+import { PARTS } from '~/data/parts';
 
 /**
  * The signature block (brief §04).
  *
  * Instead of teaching furniture vocabulary, it shows that the vocabulary is
- * *our* job. Each card leads with the phrase a real person would use and
- * only then, quietly, gives the term.
+ * *our* job. Each card leads with the phrase a real person would use; the
+ * term follows quietly underneath.
+ *
+ * Drawn diagrams rather than photographs on purpose: for recognising a part
+ * a clean line drawing beats a photo, and it keeps us honest — we are not
+ * passing off catalogue images as our own.
  */
-const PARTS = [
-  {
-    name: 'part-hinge',
-    said: '«Вот эта штука, на которой держится дверца»',
-    term: 'петля',
-    alt: 'Мебельная петля крупным планом',
-    brief: 'Четырёхшарнирная мебельная петля крупно, установлена в дверце ЛДСП. Дневной свет, реальная бывшая в употреблении мебель.',
-  },
-  {
-    name: 'part-runner',
-    said: '«Рельса, по которой ездит ящик»',
-    term: 'направляющая',
-    alt: 'Направляющая выдвижного ящика',
-    brief: 'Шариковая направляющая полного выдвижения, вид сбоку на выдвинутом ящике. Немного пыли, реальная кухня.',
-  },
-  {
-    name: 'part-lift',
-    said: '«То, что держит дверцу поднятой»',
-    term: 'подъёмный механизм',
-    alt: 'Подъёмный механизм верхнего шкафа',
-    brief: 'Газовый подъёмник верхнего кухонного шкафчика в открытом положении, снизу вверх. Обычная кухня.',
-  },
-  {
-    name: 'part-handle',
-    said: '«Ручка отвалилась, и дырки разбились»',
-    term: 'крепление ручки',
-    alt: 'Разбитое отверстие от мебельной ручки',
-    brief: 'Фасад с вырванным креплением ручки — расковырянное отверстие в ЛДСП, следы от винта. Документально, без постановки.',
-  },
-  {
-    name: 'part-unknown',
-    said: '«Понятия не имею, что это»',
-    term: 'тоже нормальный ответ',
-    alt: 'Набор мелких мебельных деталей на верстаке',
-    brief: 'Горсть разных мебельных крепежей и деталей на деревянном верстаке, сверху. Смешанные, несортированные.',
-  },
-];
+const SHOWCASE = ['petlya', 'napravlyayushchaya', 'podyemnik', 'ruchka', 'ne-znayu'];
+const parts = SHOWCASE.map((id) => PARTS.find((p) => p.id === id)!).filter(Boolean);
 ---
 
-<section class="ni section--ink">
+<section class="ni section--ink grain">
   <div class="container">
     <div class="ni__head">
       <p class="eyebrow ni__eyebrow">Главное</p>
@@ -68,21 +37,17 @@ const PARTS = [
       class="ni__scroll scroll-x"
       tabindex="0"
       role="group"
-      aria-label="Примеры деталей, которые чаще всего не могут назвать"
+      aria-label="Детали, которые чаще всего не могут назвать"
     >
       <ul class="ni__parts">
         {
-          PARTS.map((p) => (
+          parts.map((p) => (
             <li class="ni__part">
-              <Photo
-                name={p.name}
-                alt={p.alt}
-                brief={p.brief}
-                ratio="1/1"
-                sizes="(min-width: 62rem) 18vw, 44vw"
-              />
-              <p class="ni__said">{p.said}</p>
-              <p class="ni__term">{p.term}</p>
+              <a class="ni__card" href={`/opredelitel/#${p.id}`}>
+                <span class="ni__draw" set:html={p.svg} />
+                <span class="ni__said">{p.said}</span>
+                <span class="ni__term">{p.term}</span>
+              </a>
             </li>
           ))
         }
@@ -90,10 +55,12 @@ const PARTS = [
     </div>
 
     <div class="ni__cta">
-      <button class="btn btn--on-ink btn--lg" type="button" data-open-task data-cta="nameit" data-preset="part">
-        Сфотографировать деталь
+      <a class="btn btn--on-ink btn--lg" href="/opredelitel/">
+        Открыть определитель детали
+      </a>
+      <button class="ni__link" type="button" data-open-task data-cta="nameit" data-preset="part">
+        Или сразу сфотографировать свою →
       </button>
-      <a class="ni__link" href="/detal-po-foto/">Как это работает →</a>
     </div>
   </div>
 </section>
@@ -111,6 +78,7 @@ const PARTS = [
     line-height: var(--lh-display);
     letter-spacing: var(--tracking-display);
     margin-block-start: var(--sp-4);
+    color: var(--ink-invert);
     text-wrap: balance;
   }
 
@@ -128,7 +96,6 @@ const PARTS = [
     list-style: none;
     margin: var(--sp-7) 0 var(--sp-6);
     padding: 0;
-    counter-reset: ni;
   }
   .ni__steps li {
     display: flex;
@@ -138,6 +105,7 @@ const PARTS = [
     font-size: var(--step-1);
     font-weight: 600;
     letter-spacing: var(--tracking-heading);
+    color: var(--ink-invert);
   }
   .ni__steps span {
     display: grid;
@@ -161,38 +129,53 @@ const PARTS = [
   .ni__parts {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(9.5rem, 1fr);
+    grid-auto-columns: minmax(12rem, 1fr);
     gap: var(--sp-4);
     list-style: none;
     margin: 0;
     padding: 0;
   }
 
-  .ni__part :global(.photo) {
-    background: color-mix(in srgb, var(--ink-invert) 8%, transparent);
+  .ni__card {
+    display: grid;
+    gap: 0.25rem;
+    align-content: start;
+    height: 100%;
+    padding: var(--sp-4);
+    background: color-mix(in srgb, var(--ink-invert) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--ink-invert) 12%, transparent);
+    border-radius: var(--r-lg);
+    text-decoration: none;
+    transition:
+      background-color var(--dur-2) var(--ease),
+      border-color var(--dur-2) var(--ease),
+      transform var(--dur-2) var(--ease);
+  }
+  .ni__card:hover {
+    background: color-mix(in srgb, var(--ink-invert) 9%, transparent);
+    border-color: var(--accent-on-ink);
+    transform: translateY(-3px);
+  }
+
+  .ni__draw {
+    display: block;
     margin-block-end: var(--sp-3);
+    color: color-mix(in srgb, var(--ink-invert) 86%, transparent);
   }
-  /* Placeholder ink must flip on the dark band. */
-  .ni__part :global(.photo--empty) { border-color: color-mix(in srgb, var(--ink-invert) 16%, transparent); }
-  .ni__part :global(.photo__ph) { color: color-mix(in srgb, var(--ink-invert) 55%, transparent); }
-  .ni__part :global(.photo__ph-alt) { color: color-mix(in srgb, var(--ink-invert) 55%, transparent); }
-  .ni__part :global(.photo__label) {
-    background: color-mix(in srgb, #000 45%, transparent);
-    border-block-start-color: color-mix(in srgb, var(--ink-invert) 14%, transparent);
-    color: color-mix(in srgb, var(--ink-invert) 60%, transparent);
-  }
-  .ni__part :global(.photo__label-name) { color: color-mix(in srgb, var(--ink-invert) 80%, transparent); }
+  .ni__draw :global(svg) { width: 100%; height: auto; }
+  .ni__card:hover .ni__draw { color: var(--accent-on-ink); }
 
   .ni__said {
-    font-size: var(--step--1);
-    line-height: 1.4;
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 600;
+    line-height: 1.3;
     color: var(--ink-invert);
   }
 
   .ni__term {
-    margin-block-start: 0.25rem;
     font-size: var(--step--2);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--accent-on-ink);
   }
@@ -208,9 +191,10 @@ const PARTS = [
   .ni__link {
     font-size: var(--step--1);
     color: color-mix(in srgb, var(--ink-invert) 75%, transparent);
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
-  .ni__link:hover { color: var(--ink-invert); text-decoration: underline; }
+  .ni__link:hover { color: var(--ink-invert); }
 
   @media (min-width: 46rem) {
     .ni__steps {
