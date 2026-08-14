@@ -15,7 +15,8 @@
     "review": "PUBLIC_SHOW_UNCONFIRMED=true astro build",
     "a11y": "node scripts/a11y.mjs",
     "bot": "node server/bot.mjs",
-    "photos:import": "node scripts/ingest-photos.mjs"
+    "photos:import": "node scripts/ingest-photos.mjs",
+    "preview:file": "node scripts/make-preview.mjs"
   },
   "dependencies": {
     "astro": "^7.2.2",
