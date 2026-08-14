@@ -1,0 +1,336 @@
+---
+/**
+ * Рисунок вместо фотографии.
+ *
+ * Берёт мотив по имени слота и вписывает его в рамку с обвязкой рабочего
+ * чертежа: миллиметровка, номер листа, подпись. Пропорции задаёт вызывающий —
+ * рисунок центрируется и не искажается.
+ *
+ * Компонент декоративный по содержанию, но не по смыслу: наружу он отдаёт
+ * role="img" с тем же alt, что был бы у фотографии, а всю внутреннюю
+ * типографику прячет от скринридера.
+ */
+import { pickMotif, sheetCode } from '~/lib/drawings';
+
+interface Props {
+  slot: string;
+  alt: string;
+  /** Подпись под рисунком. По умолчанию — название мотива. */
+  caption?: string;
+  /** Плотная компоновка для маленьких карточек: без шапки и подписи. */
+  compact?: boolean;
+}
+
+const { slot, alt, caption, compact = false } = Astro.props;
+
+const motif = pickMotif(slot);
+const sheet = sheetCode(slot);
+const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
+---
+
+<div class:list={['dw', compact && 'dw--compact']} role="img" aria-label={alt}>
+  {
+    !compact && (
+      <div class="dw__head" aria-hidden="true">
+        <span class="dw__sheet">лист {sheet}</span>
+        <span class="dw__rule" />
+        <span class="dw__kind">рисунок</span>
+      </div>
+    )
+  }
+
+  <div class="dw__plate">
+    <svg
+      class="dw__svg"
+      viewBox="0 0 320 220"
+      preserveAspectRatio="xMidYMid meet"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <defs>
+        <pattern id={`${uid}-h`} width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="0" y2="7" class="dw-hatch" />
+        </pattern>
+      </defs>
+      <g style={`--hatch-fill:url(#${uid}-h)`} set:html={motif.body} />
+    </svg>
+  </div>
+
+  {
+    !compact && (
+      <p class="dw__cap" aria-hidden="true">
+        {caption ?? motif.title}
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .dw {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+    padding: 0.7rem 0.85rem 0.6rem;
+    background: var(--paper-raised);
+    color: var(--draw-ink);
+    container-type: inline-size;
+  }
+
+  .dw--compact {
+    grid-template-rows: 1fr;
+    padding: 0.35rem;
+  }
+
+  /* ---- Шапка листа ------------------------------------------------------ */
+
+  .dw__head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--draw-faint);
+  }
+  .dw__sheet {
+    color: var(--draw-accent);
+  }
+  .dw__rule {
+    flex: 1;
+    height: 1px;
+    background: currentColor;
+    opacity: 0.35;
+  }
+
+  /* ---- Поле чертежа ------------------------------------------------------
+     Миллиметровка: мелкая клетка плюс крупная каждые 5 шагов. Рисуется
+     градиентами, чтобы не тащить растр.                                    */
+
+  .dw__plate {
+    position: relative;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: 0.5rem;
+    background-color: var(--draw-paper);
+    background-image:
+      linear-gradient(var(--draw-grid-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--draw-grid-2) 1px, transparent 1px),
+      linear-gradient(var(--draw-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--draw-grid) 1px, transparent 1px);
+    background-size:
+      40px 40px,
+      40px 40px,
+      8px 8px,
+      8px 8px;
+    border: 1px solid var(--draw-frame);
+  }
+
+  /* Уголки рамки — как углы на настоящем листе. */
+  .dw__plate::before,
+  .dw__plate::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--draw-accent);
+    opacity: 0.55;
+  }
+  .dw__plate::before {
+    inset-block-start: 4px;
+    inset-inline-start: 4px;
+    border-inline-end: 0;
+    border-block-end: 0;
+  }
+  .dw__plate::after {
+    inset-block-end: 4px;
+    inset-inline-end: 4px;
+    border-inline-start: 0;
+    border-block-start: 0;
+  }
+
+  .dw__svg {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: visible;
+  }
+
+  /* ---- Подпись ----------------------------------------------------------- */
+
+  .dw__cap {
+    margin-block-start: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    color: var(--draw-faint);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  /* Узкая карточка: обвязка съедает рисунок — убираем её. */
+  @container (max-width: 15rem) {
+    .dw__head,
+    .dw__cap {
+      display: none;
+    }
+    .dw {
+      grid-template-rows: 1fr;
+      padding: 0.4rem;
+    }
+  }
+
+  /* ---- Штрихи ------------------------------------------------------------
+     Три веса: конструктив, детализация, аннотация. Ровно как на чертеже —
+     по толщине линии видно, что здесь главное.                             */
+
+  .dw__svg :global(*) {
+    fill: none;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .dw__svg :global(.dw-s) {
+    stroke: var(--draw-ink);
+    stroke-width: 2.1;
+  }
+  .dw__svg :global(.dw-d) {
+    stroke: var(--draw-ink-2);
+    stroke-width: 1.15;
+  }
+  /* Штрихи заданы в долях длины контура: из-за pathLength="1" абсолютные
+     значения здесь означали бы сплошную линию. */
+  .dw__svg :global(.dw-g) {
+    stroke: var(--draw-ink-2);
+    stroke-width: 1;
+    stroke-dasharray: 0.03 0.02;
+    opacity: 0.75;
+  }
+  .dw__svg :global(.dw-c) {
+    stroke: var(--draw-accent);
+    stroke-width: 0.9;
+    stroke-dasharray: 0.06 0.016 0.008 0.016;
+    opacity: 0.7;
+  }
+  .dw__svg :global(.dw-a) {
+    stroke: var(--draw-accent);
+    stroke-width: 1.4;
+  }
+  .dw__svg :global(.dw-a-fill) {
+    stroke: none;
+    fill: var(--draw-accent);
+  }
+  .dw__svg :global(.dw-tip) {
+    stroke: none;
+    fill: var(--draw-accent);
+  }
+  .dw__svg :global(.dw-h) {
+    stroke: none;
+    fill: var(--hatch-fill);
+    opacity: 0.55;
+  }
+  .dw__svg :global(.dw-hatch) {
+    stroke: var(--draw-ink-2);
+    stroke-width: 1;
+  }
+
+  .dw__svg :global(.dw-txt) {
+    stroke: none;
+    fill: var(--draw-faint);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-anchor: middle;
+  }
+  .dw__svg :global(.dw-txt--c) {
+    font-size: 8.5px;
+  }
+  .dw__svg :global(.dw-q) {
+    stroke: none;
+    fill: var(--draw-accent);
+    font-family: var(--font-display);
+    font-size: 44px;
+    font-weight: 300;
+    text-anchor: middle;
+  }
+
+  /* ---- На тёмной полосе -------------------------------------------------- */
+
+  /* Полоса перевёрнута — переворачиваем и лист. Компонент читает только
+     токены, поэтому подмены палитры достаточно, правил дублировать не надо. */
+  :global(.section--ink) .dw {
+    --draw-ink: var(--draw-ink-inv);
+    --draw-ink-2: var(--draw-ink-2-inv);
+    --draw-faint: var(--draw-faint-inv);
+    --draw-frame: var(--draw-frame-inv);
+    --draw-grid: var(--draw-grid-inv);
+    --draw-grid-2: var(--draw-grid-2-inv);
+    --draw-accent: var(--accent-on-ink);
+    background: transparent;
+  }
+  :global(.section--ink) .dw__plate {
+    background-color: color-mix(in srgb, var(--ink-invert) 4%, transparent);
+  }
+
+  /* ---- Оживление ---------------------------------------------------------
+     Линия прочерчивается, а не проявляется: чертёж рисуют, а не печатают.  */
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* До попадания в кадр лист пуст; .is-in вешает тот же наблюдатель,
+       что и на .reveal. Без JS класс не появится — поэтому прячем только
+       когда JS точно есть. */
+    :global(html.js) .dw__svg :global(:is(.dw-s, .dw-d, .dw-a)) {
+      stroke-dashoffset: 1;
+    }
+    /* Перечислением, а не :not() — обнулить прозрачность у <g> значило бы
+       спрятать лист целиком, и вернуть его было бы уже нечем. */
+    :global(html.js)
+      .dw__svg
+      :global(:is(.dw-s, .dw-d, .dw-a, .dw-g, .dw-c, .dw-h, .dw-tip, .dw-a-fill, .dw-txt, .dw-q)) {
+      opacity: 0;
+    }
+
+    :global(html.js) .dw.is-in .dw__svg :global(:is(.dw-s, .dw-d, .dw-a)) {
+      stroke-dasharray: 1;
+      animation:
+        dw-draw 1.05s var(--ease) forwards,
+        dw-fade 0.01s linear forwards;
+    }
+    /* Пунктирным линиям прочерчивание ломает рисунок штриха — они проявляются. */
+    :global(html.js) .dw.is-in .dw__svg :global(:is(.dw-g, .dw-c)) {
+      animation: dw-dim 0.6s var(--ease) 0.45s forwards;
+    }
+    :global(html.js) .dw.is-in .dw__svg :global(:is(.dw-tip, .dw-a-fill, .dw-txt, .dw-q)) {
+      animation: dw-fade 0.45s var(--ease) 0.7s forwards;
+    }
+    :global(html.js) .dw.is-in .dw__svg :global(.dw-h) {
+      animation: dw-hatch-in 0.5s var(--ease) 0.6s forwards;
+    }
+
+    @keyframes dw-draw {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    @keyframes dw-fade {
+      to {
+        opacity: 1;
+      }
+    }
+    /* Осевые и невидимые контуры тише основного штриха. */
+    @keyframes dw-dim {
+      to {
+        opacity: 0.72;
+      }
+    }
+    @keyframes dw-hatch-in {
+      to {
+        opacity: 0.55;
+      }
+    }
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import { resolve, register, ratioBox } from '~/lib/photo';
 import lqip from '~/data/lqip.json';
+import Drawing from './Drawing.astro';
 
 interface Props {
   name: string;
@@ -39,10 +40,6 @@ register({ name, alt, ratio, brief, where: where ?? Astro.url.pathname });
 const src = resolve(name);
 const { w, h } = ratioBox(ratio);
 const blur = (lqip as Record<string, string>)[name];
-
-// Deterministic per-slot hatch angle, so a given slot always looks the same.
-const seed = [...name].reduce((a, c) => a + c.charCodeAt(0), 0);
-const angle = 26 + (seed % 5) * 13;
 ---
 
 <figure
@@ -53,7 +50,7 @@ const angle = 26 + (seed % 5) * 13;
     parallax && 'photo--parallax',
     className,
   ]}
-  style={`--ratio:${ratio}; --hatch:${angle}deg;${blur ? ` --lqip:url("${blur}");` : ''}`}
+  style={`--ratio:${ratio};${blur ? ` --lqip:url("${blur}");` : ''}`}
   data-slot={name}
   data-parallax={parallax ? '' : undefined}
 >
@@ -71,27 +68,7 @@ const angle = 26 + (seed % 5) * 13;
         onload="this.closest('.photo')?.setAttribute('data-loaded','')"
       />
     ) : (
-      <div class="photo__ph" role="img" aria-label={alt}>
-        <svg class="photo__ph-icon" viewBox="0 0 48 40" aria-hidden="true">
-          <path
-            d="M3 10.5h8l3.6-5.5h18.8l3.6 5.5h8v25H3z"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linejoin="round"
-          />
-          <circle cx="24" cy="22" r="8.4" fill="none" stroke="currentColor" stroke-width="2.2" />
-        </svg>
-        <p class="photo__ph-alt">{alt}</p>
-      </div>
-    )
-  }
-  {
-    !src && (
-      <figcaption class="photo__label">
-        <span class="photo__label-name">{name}.webp</span>
-        <span class="photo__label-note">фотография не загружена</span>
-      </figcaption>
+      <Drawing slot={name} alt={alt} caption={caption} />
     )
   }
   {src && caption && <figcaption class="photo__caption">{caption}</figcaption>}
@@ -148,86 +125,18 @@ const angle = 26 + (seed % 5) * 13;
     pointer-events: none;
   }
 
-  /* ---- Placeholder ------------------------------------------------------ */
-  .photo--empty { border: 1px solid var(--line); }
+  /* ---- Без фотографии ----------------------------------------------------
+     Место занимает рисунок, а не серая заглушка: <Drawing> рисует то, что
+     здесь будет снято. Рамка кадра остаётся — она держит композицию.      */
+  .photo--empty {
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+  }
   .photo--rounded.photo--empty { border-radius: var(--r-lg); }
 
-  .photo__ph {
-    display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: 0.9rem;
-    height: 100%;
-    padding: clamp(1rem, 6%, 2.5rem);
-    padding-block-end: 2.6rem;
-    color: var(--ink-3);
-    text-align: center;
-    background-image: repeating-linear-gradient(
-      var(--hatch),
-      transparent 0 9px,
-      color-mix(in srgb, currentColor 13%, transparent) 9px 10px
-    );
-  }
-
-  .photo__ph-icon {
-    width: clamp(1.9rem, 13%, 3.1rem);
-    height: auto;
-    opacity: 0.5;
-  }
-
-  .photo__ph-alt {
-    max-width: 26ch;
-    font-size: var(--step--2);
-    line-height: 1.4;
-    color: var(--ink-3);
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
-
-  .photo__label {
-    position: absolute;
-    inset-inline: 0;
-    inset-block-end: 0;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.15rem 0.55rem;
-    padding: 0.45rem 0.7rem;
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    line-height: 1.3;
-    color: var(--ink-3);
-    background: color-mix(in srgb, var(--paper) 80%, transparent);
-    border-block-start: 1px solid var(--line);
-    backdrop-filter: blur(3px);
-  }
-
-  .photo__label-name { color: var(--ink-2); font-weight: 600; }
-  .photo__label-note { opacity: 0.8; }
-
-  @container (max-width: 11rem) {
-    .photo__ph-alt { display: none; }
-  }
-
-  /* On an inverted band the placeholder has to invert with it. */
   :global(.section--ink) .photo--empty {
-    background: color-mix(in srgb, var(--ink-invert) 6%, transparent);
+    background: color-mix(in srgb, var(--ink-invert) 5%, transparent);
     border-color: color-mix(in srgb, var(--ink-invert) 14%, transparent);
-  }
-  :global(.section--ink) .photo__ph,
-  :global(.section--ink) .photo__ph-alt {
-    color: color-mix(in srgb, var(--ink-invert) 62%, transparent);
-  }
-  :global(.section--ink) .photo__label {
-    background: color-mix(in srgb, #000 40%, transparent);
-    border-block-start-color: color-mix(in srgb, var(--ink-invert) 14%, transparent);
-    color: color-mix(in srgb, var(--ink-invert) 66%, transparent);
-  }
-  :global(.section--ink) .photo__label-name {
-    color: color-mix(in srgb, var(--ink-invert) 84%, transparent);
   }
 
   @media (prefers-reduced-motion: reduce) {

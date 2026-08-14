@@ -269,7 +269,8 @@ function parallax() {
 /* --------------------------------------------------------------- reveal */
 
 function reveal() {
-  const items = document.querySelectorAll<HTMLElement>('.reveal, .reveal-up, .reveal-wipe');
+  // .dw — рисунки: линия прочерчивается, когда лист попал в кадр.
+  const items = document.querySelectorAll<HTMLElement>('.reveal, .reveal-up, .reveal-wipe, .dw');
   if (!items.length) return;
 
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {

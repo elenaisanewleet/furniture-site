@@ -455,17 +455,13 @@ const REASONS = [
   }
 
   .hero__media { position: relative; }
-  .hero__media :global(.photo) {
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-3);
-  }
-  /* Hairline offset frame — cheap, and reads as considered rather than flat. */
+  /* Смещённый контур здесь один: тень листа и рамка — это одно и то же,
+     а две подложки друг под другом читаются как брак печати. */
   .hero__frame {
     position: absolute;
     inset: 0;
     translate: 0.85rem 0.85rem;
-    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-    border-radius: var(--r-lg);
+    border: 1px solid color-mix(in srgb, var(--accent-on-ink) 60%, transparent);
     z-index: -1;
   }
 

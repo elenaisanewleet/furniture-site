@@ -21,7 +21,6 @@ html {
 
 body {
   min-height: 100dvh;
-  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: var(--step-0);
@@ -31,6 +30,15 @@ body {
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'kern' 1, 'liga' 1;
   overflow-wrap: break-word;
+
+  /* Подложка — миллиметровка. Крупная клетка на просвет, мелкая почти на
+     пределе видимости: страница должна ощущаться листом, а не разлиновкой. */
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--draw-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--draw-grid) 1px, transparent 1px);
+  background-size: 88px 88px, 88px 88px;
+  background-position: center top;
 }
 
 img,
@@ -149,11 +157,31 @@ a {
 
 .section--sunken {
   background: var(--paper-sunken);
+  border-block: 1px solid var(--line);
 }
 
 .section--ink {
-  background: var(--paper-invert);
+  background-color: var(--paper-invert);
   color: var(--ink-invert);
+
+  /* Полоса перевёрнута, а токены линий и полутонов остались от светлой
+     темы: кремовая линия на графите читается как яркая плашка, а серый
+     текст проваливается. Пересчитываем их от инвертированных чернил —
+     тогда любой компонент внутри полосы получает верные значения сам, без
+     собственного набора правил под .section--ink. */
+  --line: color-mix(in srgb, var(--ink-invert) 16%, transparent);
+  --line-strong: color-mix(in srgb, var(--ink-invert) 30%, transparent);
+  --paper-raised: color-mix(in srgb, var(--ink-invert) 5%, transparent);
+  --paper-sunken: color-mix(in srgb, var(--ink-invert) 9%, transparent);
+  --ink-2: color-mix(in srgb, var(--ink-invert) 80%, transparent);
+  --ink-3: color-mix(in srgb, var(--ink-invert) 62%, transparent);
+  --accent-ink: var(--accent-on-ink);
+  /* Тёмная полоса — тот же лист, только перевёрнутый: сетка остаётся. */
+  background-image:
+    linear-gradient(rgb(180 200 210 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(180 200 210 / 0.05) 1px, transparent 1px);
+  background-size: 88px 88px, 88px 88px;
+  background-position: center top;
 }
 
 .section--ink :is(h1, h2, h3) {
@@ -178,25 +206,31 @@ a {
 
 /* ---- Editorial furniture ---------------------------------------------- */
 
+/* Надзаголовок — подпись на поле чертежа: моноширинная, с засечкой-выноской. */
 .eyebrow {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-family: var(--font-body);
+  gap: 0.55rem;
+  font-family: var(--font-mono);
   font-size: var(--step--2);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--ink-3);
 }
 
+/* Уголок выноски: вертикальная засечка и горизонтальная полка. */
 .eyebrow::before {
   content: '';
-  width: 1.6rem;
-  height: 1px;
-  background: var(--accent);
+  width: 1.5rem;
+  height: 0.5rem;
   flex: none;
+  border-block-end: 1px solid var(--accent);
+  border-inline-start: 1px solid var(--accent);
 }
+
+.section--ink .eyebrow { color: color-mix(in srgb, var(--ink-invert) 66%, transparent); }
+.section--ink .eyebrow::before { border-color: var(--accent-on-ink); }
 
 .lede {
   font-size: var(--step-1);
@@ -210,35 +244,67 @@ a {
   gap: var(--sp-4);
   margin-block-end: var(--sp-7);
   max-width: 62ch;
+  /* Заголовок раздела начинается от края поля, как строка на листе. */
+  padding-block-start: var(--sp-4);
+  border-block-start: 1px solid var(--line);
 }
 
-/* Rule that reads as a printed hairline, not a border. */
+.section--ink .section-head {
+  border-block-start-color: color-mix(in srgb, var(--ink-invert) 18%, transparent);
+}
+
+/* Разделитель — размерная линия: тонкая, с засечками по концам. */
 .rule {
+  position: relative;
   border: 0;
   border-top: 1px solid var(--line);
   margin: 0;
+  overflow: visible;
+}
+.rule::before,
+.rule::after {
+  content: '';
+  position: absolute;
+  inset-block-start: -4px;
+  width: 1px;
+  height: 9px;
+  background: var(--line-strong);
+}
+.rule::before { inset-inline-start: 0; }
+.rule::after { inset-inline-end: 0; }
+
+.section--ink .rule {
+  border-top-color: color-mix(in srgb, var(--ink-invert) 18%, transparent);
+}
+.section--ink .rule::before,
+.section--ink .rule::after {
+  background: color-mix(in srgb, var(--ink-invert) 32%, transparent);
 }
 
 /* ---- Buttons ----------------------------------------------------------- */
 
+/* Кнопка — штамп, а не пилюля: прямые углы, смещённый контур вместо тени.
+   При нажатии «садится» на подложку — движение читается без анимации цвета. */
 .btn {
   --btn-bg: var(--ink);
   --btn-fg: var(--ink-invert);
   --btn-bd: var(--ink);
+  --btn-shadow: var(--line-strong);
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
   min-height: 3.25rem;
-  padding: 0.85rem 1.5rem;
+  padding: 0.85rem 1.6rem;
   background: var(--btn-bg);
   color: var(--btn-fg);
   border: 1.5px solid var(--btn-bd);
-  border-radius: var(--r-pill);
+  border-radius: 0;
   font-family: var(--font-display);
   font-size: var(--step-0);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   text-decoration: none;
   text-align: center;
   transition:
@@ -246,43 +312,47 @@ a {
     background-color var(--dur-2) var(--ease),
     color var(--dur-2) var(--ease),
     border-color var(--dur-2) var(--ease),
-    box-shadow var(--dur-2) var(--ease);
+    box-shadow var(--dur-1) var(--ease);
 }
 
 .btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-2);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--btn-shadow);
 }
 .btn:active {
-  transform: translateY(0);
+  transform: translate(0, 0);
+  box-shadow: 0 0 0 var(--btn-shadow);
 }
 
 .btn--ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
   --btn-bd: var(--line-strong);
+  --btn-shadow: var(--line);
 }
 .btn--ghost:hover {
   --btn-bd: var(--ink);
-  box-shadow: none;
 }
 
 .btn--accent {
   --btn-bg: var(--accent);
   --btn-fg: var(--accent-on);
   --btn-bd: var(--accent);
+  --btn-shadow: var(--ink);
 }
 
 .btn--on-ink {
   --btn-bg: var(--paper);
   --btn-fg: var(--ink);
   --btn-bd: var(--paper);
+  --btn-shadow: var(--accent-on-ink);
 }
 
 .btn--on-ink-ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink-invert);
   --btn-bd: color-mix(in srgb, var(--ink-invert) 35%, transparent);
+  --btn-shadow: color-mix(in srgb, var(--ink-invert) 30%, transparent);
 }
 .btn--on-ink-ghost:hover {
   --btn-bd: var(--ink-invert);
@@ -322,13 +392,15 @@ a {
 
 /* ---- Cards ------------------------------------------------------------- */
 
+/* Карточка — лист в стопке: прямая рамка, уголок-засечка, при наведении
+   выходит из стопки и открывает контур под собой. */
 .card {
   position: relative;
   display: flex;
   flex-direction: column;
   background: var(--paper-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border: 1px solid var(--line-strong);
+  border-radius: 0;
   overflow: hidden;
   transition:
     border-color var(--dur-2) var(--ease),
@@ -336,11 +408,47 @@ a {
     box-shadow var(--dur-2) var(--ease);
 }
 
+/* Срезанный уголок — метка листа. Декоративная, поверх содержимого. */
+.card::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  width: 13px;
+  height: 13px;
+  background: linear-gradient(
+    to bottom left,
+    var(--paper) 0 50%,
+    var(--line-strong) 50% calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
 .card:has(a:hover),
 .card:has(a:focus-visible) {
-  border-color: var(--line-strong);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-2);
+  border-color: var(--ink);
+  transform: translate(-3px, -3px);
+  box-shadow: 5px 5px 0 var(--line-strong);
+}
+
+.section--ink .card {
+  background: color-mix(in srgb, var(--ink-invert) 4%, transparent);
+  border-color: color-mix(in srgb, var(--ink-invert) 22%, transparent);
+}
+.section--ink .card::after {
+  background: linear-gradient(
+    to bottom left,
+    var(--paper-invert) 0 50%,
+    color-mix(in srgb, var(--ink-invert) 30%, transparent) 50% calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+.section--ink .card:has(a:hover),
+.section--ink .card:has(a:focus-visible) {
+  border-color: var(--ink-invert);
+  box-shadow: 5px 5px 0 var(--accent-on-ink);
 }
 
 /* Whole-card click target driven by the single real link inside. */
@@ -374,13 +482,14 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.28rem 0.7rem;
-  border-radius: var(--r-pill);
+  padding: 0.26rem 0.6rem;
+  border-radius: 0;
   background: var(--paper-sunken);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
   font-size: var(--step--2);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   color: var(--ink-2);
 }
 
@@ -561,9 +670,9 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.24rem 0.65rem;
+  padding: 0.24rem 0.6rem;
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-pill);
+  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   letter-spacing: 0.04em;
@@ -609,14 +718,18 @@ a {
   }
   .reveal-up.is-in { opacity: 1; transform: none; }
 
-  /* Image wipes in from its own edge rather than fading. */
-  .reveal-wipe {
+  /* Кадр открывается снизу вверх, а не проявляется.
+     Обрезка висит на потомке, а не на самом элементе: clip-path обнуляет
+     площадь пересечения, наблюдатель перестаёт видеть цель и класс .is-in
+     не приходит никогда — блок остаётся невидимым навсегда. */
+  .reveal-wipe > * {
     clip-path: inset(0 0 100% 0);
     transition: clip-path var(--dur-4) var(--ease);
   }
-  .reveal-wipe.is-in { clip-path: inset(0 0 0 0); }
+  .reveal-wipe.is-in > * { clip-path: inset(0 0 0 0); }
 
-  html:not(.js) :is(.reveal-up, .reveal-wipe) {
+  html:not(.js) :is(.reveal-up, .reveal-wipe),
+  html:not(.js) .reveal-wipe > * {
     opacity: 1;
     transform: none;
     clip-path: none;

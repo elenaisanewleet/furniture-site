@@ -1,40 +1,65 @@
 /* =========================================================================
-   Design tokens
+   Design tokens — «рабочий чертёж»
    -------------------------------------------------------------------------
-   Tuned to the workshop itself: pine walls, concrete block, zinc-plated
-   hardware, warm bulb light. The dark surface is a *warm* near-black taken
-   from the shadows in those photographs, not a neutral grey — a cool black
-   would fight every image on the site.
+   Мастерская работает по чертежу: сначала лист, потом деталь. Сайт устроен
+   так же. Отсюда всё остальное — миллиметровка вместо фона, размерные линии
+   вместо декоративных разделителей, моноширинные выноски вместо «красивых»
+   подзаголовков, прямые углы вместо скруглений.
 
-   Deliberately NOT the Russian furniture-site default of brown gradients,
-   wood-texture backgrounds and gold trim.
+   Бумага тёплая, как настоящий лист под лампой; графит холоднее её, как
+   настоящий грифель; красный — карандаш мастера, которым помечают то, что
+   надо переделать. Ровно один акцент, и он всегда значит одно: здесь ваша
+   задача.
+
+   Чего здесь нет и не будет: коричневых градиентов, текстуры дерева фоном,
+   золота, стекла и мягких теней под всё подряд.
    ========================================================================= */
 
 :root {
   color-scheme: light dark;
 
   /* ---- Surface & ink ------------------------------------------------- */
-  --paper: #faf7f2;
-  --paper-raised: #fffdfa;
-  --paper-sunken: #efe9e0;
-  --paper-invert: #14110f;
+  --paper: #f4f1ea;
+  --paper-raised: #fbf9f4;
+  --paper-sunken: #e7e2d7;
+  --paper-invert: #16181a;
 
-  --ink: #14110f;
-  --ink-2: #46403a;
-  --ink-3: #6e665e;
-  --ink-invert: #faf7f2;
+  --ink: #16181a;
+  --ink-2: #3f4548;
+  --ink-3: #5d6367;   /* 4.8:1 даже по --paper-sunken */
+  --ink-invert: #f4f1ea;
 
-  --line: #e0d8cc;
-  --line-strong: #c7bcac;
+  --line: #d8d2c4;
+  --line-strong: #b3ab99;
 
   /* ---- Accent ---------------------------------------------------------
-     Terracotta — the one colour in the workshop that isn't wood or metal.
-     Used as a *marker*: it means "this is where you show your task".      */
-  --accent: #c04a21;
-  --accent-ink: #97381a;      /* accent as text on paper      — 6.9:1 */
-  --accent-on-ink: #f08a5c;   /* accent as text on the dark   — 7.7:1 */
-  --accent-soft: #f8e8df;
+     Красный карандаш. Метка, а не украшение: означает «здесь ваша задача».  */
+  --accent: #c8321e;
+  --accent-ink: #a52716;      /* по бумаге    — 6.4:1 */
+  --accent-on-ink: #ff8a6e;   /* по графиту   — 7.4:1 */
+  --accent-soft: #f7e4de;
   --accent-on: #ffffff;
+
+  /* ---- Чертёж ----------------------------------------------------------
+     Отдельная палитра для рисунков: у листа своя бумага и свой грифель,
+     они не обязаны совпадать с интерфейсом.                               */
+  --draw-paper: #f7f4ec;
+  --draw-ink: #1e2528;
+  --draw-ink-2: #5d666b;
+  --draw-faint: #6a7175;   /* 4.7:1 по --paper-raised */
+  --draw-accent: var(--accent);
+  --draw-frame: #cdc6b6;
+  --draw-grid: rgb(90 108 116 / 0.075);
+  --draw-grid-2: rgb(90 108 116 / 0.16);
+
+  /* Тот же лист на перевёрнутой полосе (.section--ink). Значения зеркальны
+     основным: там, где полоса тёмная, грифель светлый, и наоборот. */
+  --draw-ink-inv: #e4e1d8;
+  --draw-ink-2-inv: #9aa1a5;
+  --draw-faint-inv: #949b9f; /* 6.0:1 по --paper-invert */
+  --draw-frame-inv: #3a4046;
+  --draw-grid-inv: rgb(170 190 200 / 0.07);
+  --draw-grid-2-inv: rgb(170 190 200 / 0.15);
 
   --focus: #1d4ed8;
 
@@ -86,17 +111,21 @@
   --container-prose: 40rem;
   --gutter: clamp(1.15rem, 0.6rem + 2.4vw, 3rem);
 
-  /* ---- Shape ----------------------------------------------------------- */
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 14px;
-  --r-xl: 22px;
-  --r-pill: 999px;
+  /* ---- Shape ------------------------------------------------------------
+     Чертёж не скругляют. Радиусы оставлены токенами, чтобы не переписывать
+     полсотни мест, но сведены почти к нулю.                              */
+  --r-sm: 0px;
+  --r-md: 1px;
+  --r-lg: 2px;
+  --r-xl: 2px;
+  --r-pill: 2px;
 
-  /* ---- Elevation — warm-tinted, never grey ----------------------------- */
-  --shadow-1: 0 1px 2px rgb(20 17 15 / 0.05), 0 1px 1px rgb(20 17 15 / 0.04);
-  --shadow-2: 0 4px 14px -4px rgb(20 17 15 / 0.10), 0 2px 4px -2px rgb(20 17 15 / 0.06);
-  --shadow-3: 0 18px 44px -12px rgb(20 17 15 / 0.22), 0 6px 14px -8px rgb(20 17 15 / 0.10);
+  /* ---- Elevation ---------------------------------------------------------
+     Лист не парит. Вместо размытых теней — смещённый контур, как второй
+     лист под первым.                                                      */
+  --shadow-1: none;
+  --shadow-2: 3px 3px 0 var(--line);
+  --shadow-3: 6px 6px 0 var(--line-strong);
 
   /* ---- Motion ---------------------------------------------------------- */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -122,56 +151,86 @@
    ------------------------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --paper: #131110;
-    --paper-raised: #1c1917;
-    --paper-sunken: #0e0c0b;
-    --paper-invert: #f5f1ea;
+    --paper: #14161a;
+    --paper-raised: #1b1e22;
+    --paper-sunken: #0f1113;
+    --paper-invert: #f0ede5;
 
-    --ink: #f5f1ea;
-    --ink-2: #b8afa4;
-    --ink-3: #8b8279;
-    --ink-invert: #131110;
+    --ink: #f0ede5;
+    --ink-2: #b4b8b8;
+    --ink-3: #868b8d;
+    --ink-invert: #14161a;
 
-    --line: #2e2a27;
-    --line-strong: #453f3a;
+    --line: #2b2f33;
+    --line-strong: #444a4f;
 
-    --accent: #e4794e;
-    --accent-ink: #f3a882;
-    --accent-on-ink: #97381a;
-    --accent-soft: #2a1b14;
-    --accent-on: #17110d;
+    --accent: #f2624a;
+    --accent-ink: #ff8a6e;
+    --accent-on-ink: #a52716;
+    --accent-soft: #2c1a16;
+    --accent-on: #17100e;
+
+    --draw-paper: #191c1f;
+    --draw-ink: #e4e1d8;
+    --draw-ink-2: #9aa1a5;
+    --draw-faint: #969ca0;   /* 6.0:1 по --paper-raised */
+    --draw-frame: #363b40;
+    --draw-grid: rgb(170 190 200 / 0.06);
+    --draw-grid-2: rgb(170 190 200 / 0.13);
+
+    --draw-ink-inv: #1e2528;
+    --draw-ink-2-inv: #5d666b;
+    --draw-faint-inv: #61686c; /* 4.8:1 по --paper-invert */
+    --draw-frame-inv: #c6bfae;
+    --draw-grid-inv: rgb(90 108 116 / 0.08);
+    --draw-grid-2-inv: rgb(90 108 116 / 0.17);
 
     --focus: #7ba7ff;
 
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-    --shadow-2: 0 4px 14px -4px rgb(0 0 0 / 0.55);
-    --shadow-3: 0 18px 44px -12px rgb(0 0 0 / 0.7);
+    --shadow-1: none;
+    --shadow-2: 3px 3px 0 var(--line);
+    --shadow-3: 6px 6px 0 var(--line-strong);
   }
 }
 
 :root[data-theme='dark'] {
-  --paper: #131110;
-  --paper-raised: #1c1917;
-  --paper-sunken: #0e0c0b;
-  --paper-invert: #f5f1ea;
+  --paper: #14161a;
+  --paper-raised: #1b1e22;
+  --paper-sunken: #0f1113;
+  --paper-invert: #f0ede5;
 
-  --ink: #f5f1ea;
-  --ink-2: #b8afa4;
-  --ink-3: #8b8279;
-  --ink-invert: #131110;
+  --ink: #f0ede5;
+  --ink-2: #b4b8b8;
+  --ink-3: #868b8d;
+  --ink-invert: #14161a;
 
-  --line: #2e2a27;
-  --line-strong: #453f3a;
+  --line: #2b2f33;
+  --line-strong: #444a4f;
 
-  --accent: #e4794e;
-  --accent-ink: #f3a882;
-  --accent-on-ink: #97381a;
-  --accent-soft: #2a1b14;
-  --accent-on: #17110d;
+  --accent: #f2624a;
+  --accent-ink: #ff8a6e;
+  --accent-on-ink: #a52716;
+  --accent-soft: #2c1a16;
+  --accent-on: #17100e;
+
+  --draw-paper: #191c1f;
+  --draw-ink: #e4e1d8;
+  --draw-ink-2: #9aa1a5;
+  --draw-faint: #969ca0;   /* 6.0:1 по --paper-raised */
+  --draw-frame: #363b40;
+  --draw-grid: rgb(170 190 200 / 0.06);
+  --draw-grid-2: rgb(170 190 200 / 0.13);
+
+  --draw-ink-inv: #1e2528;
+  --draw-ink-2-inv: #5d666b;
+  --draw-faint-inv: #61686c; /* 4.8:1 по --paper-invert */
+  --draw-frame-inv: #c6bfae;
+  --draw-grid-inv: rgb(90 108 116 / 0.08);
+  --draw-grid-2-inv: rgb(90 108 116 / 0.17);
 
   --focus: #7ba7ff;
 
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-2: 0 4px 14px -4px rgb(0 0 0 / 0.55);
-  --shadow-3: 0 18px 44px -12px rgb(0 0 0 / 0.7);
+  --shadow-1: none;
+  --shadow-2: 3px 3px 0 var(--line);
+  --shadow-3: 6px 6px 0 var(--line-strong);
 }
