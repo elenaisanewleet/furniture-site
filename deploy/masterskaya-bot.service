@@ -1,0 +1,41 @@
+# Telegram-мост: связывает переписку с заявкой.
+#
+# Порт не занимает — сам ходит в Telegram за обновлениями, поэтому в
+# nginx для него ничего настраивать не нужно.
+#
+#   sudo cp deploy/masterskaya-bot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now masterskaya-bot
+
+[Unit]
+Description=Мастерская — Telegram-мост
+After=network.target masterskaya-lead.service
+
+[Service]
+Type=simple
+User=masterskaya
+Group=masterskaya
+WorkingDirectory=/srv/masterskaya
+ExecStart=/usr/bin/node server/bot.mjs
+EnvironmentFile=/srv/masterskaya/.env
+
+Restart=always
+RestartSec=10
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/masterskaya/data
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=masterskaya-bot
+
+[Install]
+WantedBy=multi-user.target

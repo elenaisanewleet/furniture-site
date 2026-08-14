@@ -1,0 +1,44 @@
+# Приём заявок. Слушает только localhost — наружу его выставляет nginx.
+#
+#   sudo cp deploy/masterskaya-lead.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now masterskaya-lead
+#   systemctl status masterskaya-lead
+
+[Unit]
+Description=Мастерская — приём заявок
+After=network.target
+
+[Service]
+Type=simple
+User=masterskaya
+Group=masterskaya
+WorkingDirectory=/srv/masterskaya
+ExecStart=/usr/bin/node server/index.mjs
+
+# Секреты — отдельным файлом с правами 600, а не в этом юните:
+# systemctl show и journalctl видны шире, чем кажется.
+EnvironmentFile=/srv/masterskaya/.env
+
+Restart=always
+RestartSec=5
+
+# Заявки — имя, телефон и фотографии чужой квартиры. Ограничиваем процесс
+# так, чтобы дырка в нём не открывала доступ ко всей машине.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/masterskaya/data
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=masterskaya-lead
+
+[Install]
+WantedBy=multi-user.target
