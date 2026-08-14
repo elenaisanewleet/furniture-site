@@ -1,0 +1,132 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import UnconfirmedNote from '~/components/UnconfirmedNote.astro';
+import { isPublic } from '~/lib/facts';
+import { faqPage } from '~/lib/schema';
+
+const entries = (await getCollection('faq'))
+  .filter((f) => isPublic(f.data.status))
+  .sort((a, b) => a.data.order - b.data.order);
+
+const rendered = await Promise.all(
+  entries.map(async (e) => ({ entry: e, Content: (await render(e)).Content }))
+);
+
+const GROUPS = [
+  { key: 'zayavka', title: 'Как поставить задачу' },
+  { key: 'remont', title: 'Ремонт и переделка' },
+  { key: 'furnitura', title: 'Детали и фурнитура' },
+  { key: 'dengi', title: 'Деньги' },
+  { key: 'rabota', title: 'Как мы работаем' },
+] as const;
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Вопросы', href: '/faq/' },
+];
+
+const schemaItems = entries.map((e) => ({ q: e.data.q, a: e.data.a }));
+---
+
+<Base
+  title="Частые вопросы"
+  description="Можно ли сделать мебель по фото, что делать, если не знаете название детали, можно ли заменить одну дверцу и как считается стоимость."
+  canonical="/faq/"
+  breadcrumb={trail}
+  schema={[faqPage(schemaItems)].filter(Boolean)}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="container fq__head">
+    <h1>Частые вопросы</h1>
+    <p class="lede">
+      Если ответа на ваш вопрос здесь нет — это тоже нормально. Спросите
+      напрямую, отвечать будет человек.
+    </p>
+  </header>
+
+  {
+    GROUPS.map((g) => {
+      const items = rendered.filter((r) => r.entry.data.group === g.key);
+      if (!items.length) return null;
+      return (
+        <section class="container fq__group">
+          <h2 class="fq__group-title">{g.title}</h2>
+          <div class="fq__items">
+            {items.map(({ entry, Content }) => (
+              <details class="fq__item">
+                <summary>
+                  <span>{entry.data.q}</span>
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M3 6l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </summary>
+                <div class="fq__answer prose">
+                  <p class="fq__short">{entry.data.a}</p>
+                  <Content />
+                  <UnconfirmedNote status={entry.data.status} />
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+      );
+    })
+  }
+
+  <ShowTask
+    tone="ink"
+    title="Проще показать, чем описать"
+    text="Один кадр с телефона отвечает сразу на половину вопросов."
+  />
+</Base>
+
+<style>
+  .fq__head {
+    padding-block: var(--sp-6) var(--sp-7);
+    max-width: 42rem;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .fq__head h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+
+  .fq__group { margin-block-end: var(--sp-7); max-width: 52rem; }
+
+  .fq__group-title {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-2);
+  }
+
+  .fq__items { border-block-start: 1px solid var(--line); }
+
+  .fq__item { border-block-end: 1px solid var(--line); }
+
+  .fq__item summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding-block: var(--sp-4);
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.3;
+  }
+  .fq__item summary::-webkit-details-marker { display: none; }
+  .fq__item summary:hover { color: var(--accent-ink); }
+  .fq__item summary svg { width: 1rem; flex: none; color: var(--ink-3); transition: transform var(--dur-2) var(--ease); }
+  .fq__item[open] summary svg { transform: rotate(180deg); }
+
+  .fq__answer { padding-block-end: var(--sp-5); }
+  .fq__short { color: var(--ink) !important; font-weight: 500; }
+</style>

@@ -1,0 +1,67 @@
+---
+import Base from '~/layouts/Base.astro';
+import { primaryContact } from '~/data/site';
+---
+
+<Base
+  title="Задача отправлена"
+  description="Заявка получена."
+  canonical="/spasibo/"
+  noindex
+  hideStickyCta
+>
+  <div class="container sp">
+    <div class="sp__mark" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><path d="M13 24.5 20.5 32 35 17" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+
+    <h1>Задача отправлена</h1>
+    <p class="sp__text">
+      Посмотрим фотографии и свяжемся с вами, чтобы уточнить детали.
+      Если по снимкам что-то будет непонятно, просто спросим — гадать
+      не станем.
+    </p>
+
+    {
+      primaryContact && (
+        <p class="sp__call">
+          Если срочно, можно позвонить:{' '}
+          <a href={`tel:${primaryContact.tel}`} data-track="phone_click" data-track-where="thanks">
+            {primaryContact.phone}
+          </a>
+        </p>
+      )
+    }
+
+    <div class="sp__actions">
+      <a class="btn btn--ghost" href="/proekty/">Посмотреть работы</a>
+      <a class="btn btn--ghost" href="/journal/">Почитать журнал</a>
+      <a class="btn btn--ghost" href="/">На главную</a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .sp {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-5);
+    max-width: 40rem;
+    padding-block: var(--sp-9) var(--sp-10);
+  }
+  .sp__mark {
+    display: grid;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .sp__mark svg { width: 2.2rem; }
+  .sp h1 { font-size: var(--step-5); line-height: var(--lh-display); }
+  .sp__text { font-size: var(--step-1); color: var(--ink-2); line-height: 1.6; }
+  .sp__call { color: var(--ink-2); }
+  .sp__call a { font-weight: 650; color: var(--ink); }
+  .sp__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-block-start: var(--sp-3); }
+</style>

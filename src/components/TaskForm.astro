@@ -1,0 +1,667 @@
+---
+import { site } from '~/data/site';
+
+interface Props {
+  /** Unique per instance — the dialog and the standalone page coexist. */
+  id?: string;
+  /** Pre-selects step 1 when arriving from a specific service page. */
+  preset?: string;
+  /** Rendered as the form's own heading on the standalone page. */
+  heading?: string;
+  compact?: boolean;
+}
+
+const { id = 'task', preset, heading, compact = false } = Astro.props;
+
+const TYPES = [
+  { v: 'new', label: 'Сделать новую мебель', note: 'шкаф, кухня, стол, полки' },
+  { v: 'remake', label: 'Переделать существующую', note: 'фасады, размер, наполнение' },
+  { v: 'repair', label: 'Починить мебель', note: 'сломалось, перекосилось' },
+  { v: 'part', label: 'Найти или заменить деталь', note: 'петля, ручка, направляющая' },
+  { v: 'custom-part', label: 'Сделать нестандартную деталь', note: 'по образцу или по фото' },
+  { v: 'unknown', label: 'Пока не знаю', note: 'посмотрите сами' },
+];
+
+const { maxFiles, maxFileMb, accept, maxVoiceSeconds } = site.upload;
+const action = site.leadEndpoint || '/spasibo/';
+---
+
+<form
+  class:list={['tf', compact && 'tf--compact']}
+  id={id}
+  data-task-form
+  data-preset={preset}
+  data-endpoint={site.leadEndpoint || undefined}
+  method="post"
+  action={action}
+  enctype="multipart/form-data"
+  novalidate
+>
+  <!-- Filled by JS; harmless when absent. -->
+  <input type="hidden" name="landing_page" data-field="landing_page" />
+  <input type="hidden" name="cta_type" data-field="cta_type" />
+  <input type="hidden" name="utm" data-field="utm" />
+  <input type="hidden" name="consent_version" value="2026-08-14" />
+  <!-- Bots fill this; humans never see it. -->
+  <input type="text" name="company" class="tf__trap" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+  {heading && <h2 class="tf__heading">{heading}</h2>}
+
+  <ol class="tf__progress" data-progress aria-hidden="true">
+    <li data-step-dot="1"></li>
+    <li data-step-dot="2"></li>
+    <li data-step-dot="3"></li>
+    <li data-step-dot="4"></li>
+  </ol>
+
+  <p class="tf__live visually-hidden" role="status" aria-live="polite" data-live></p>
+
+  <!-- ================= Step 1 ================= -->
+  <section class="tf__step" data-step="1">
+    <fieldset class="tf__fieldset">
+      <legend class="tf__legend">
+        <span class="tf__step-no">1</span>
+        Что нужно сделать?
+      </legend>
+      <p class="tf__hint">Выберите то, что ближе. Ошибиться нельзя — уточним потом.</p>
+
+      <div class="tf__types">
+        {
+          TYPES.map((t) => (
+            <label class="tf__type">
+              <input
+                type="radio"
+                name="request_type"
+                value={t.v}
+                checked={preset === t.v || undefined}
+                data-type-input
+              />
+              <span class="tf__type-body">
+                <span class="tf__type-label">{t.label}</span>
+                <span class="tf__type-note">{t.note}</span>
+              </span>
+            </label>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <div class="tf__nav">
+      <button type="button" class="btn btn--block" data-next>Дальше</button>
+    </div>
+  </section>
+
+  <!-- ================= Step 2 ================= -->
+  <section class="tf__step" data-step="2">
+    <fieldset class="tf__fieldset">
+      <legend class="tf__legend">
+        <span class="tf__step-no">2</span>
+        Покажите задачу
+      </legend>
+      <p class="tf__hint">
+        Сфотографируйте мебель, поломку, место установки или саму деталь.
+        Разбираться в названиях не обязательно.
+      </p>
+
+      <div class="tf__drop" data-drop="photos">
+        <input
+          type="file"
+          id={`${id}-photos`}
+          name="photos"
+          accept={accept}
+          multiple
+          class="tf__file"
+          data-files="photos"
+        />
+        <label for={`${id}-photos`} class="tf__drop-face">
+          <svg viewBox="0 0 32 32" aria-hidden="true" class="tf__drop-icon">
+            <path d="M4.5 9.8h5l2.2-3.3h8.6l2.2 3.3h5v15.7h-23z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <circle cx="16" cy="16.6" r="5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          </svg>
+          <span class="tf__drop-title">Добавить фотографии</span>
+          <span class="tf__drop-note">
+            Можно снять прямо сейчас или выбрать из галереи.
+            До {maxFiles} файлов, до {maxFileMb} МБ каждый.
+          </span>
+        </label>
+      </div>
+      <ul class="tf__thumbs" data-thumbs="photos"></ul>
+
+      <details class="tf__more">
+        <summary>Есть пример того, что нравится?</summary>
+        <p class="tf__hint">
+          Скриншот из Pinterest, фото из интернета, набросок на бумаге —
+          подойдёт что угодно.
+        </p>
+        <div class="tf__drop tf__drop--sm" data-drop="references">
+          <input
+            type="file"
+            id={`${id}-refs`}
+            name="references"
+            accept={accept}
+            multiple
+            class="tf__file"
+            data-files="references"
+          />
+          <label for={`${id}-refs`} class="tf__drop-face">
+            <span class="tf__drop-title">Добавить референс</span>
+          </label>
+        </div>
+        <ul class="tf__thumbs" data-thumbs="references"></ul>
+      </details>
+
+      <p class="tf__aside">
+        Фото уже достаточно, чтобы начать. Если сфотографировать не получается —
+        просто идите дальше.
+      </p>
+    </fieldset>
+
+    <div class="tf__nav">
+      <button type="button" class="btn btn--ghost" data-prev>Назад</button>
+      <button type="button" class="btn" data-next>Дальше</button>
+    </div>
+  </section>
+
+  <!-- ================= Step 3 ================= -->
+  <section class="tf__step" data-step="3">
+    <fieldset class="tf__fieldset">
+      <legend class="tf__legend">
+        <span class="tf__step-no">3</span>
+        Расскажите своими словами
+      </legend>
+      <p class="tf__hint">Необязательно. Пары фраз хватит.</p>
+
+      <label class="visually-hidden" for={`${id}-desc`}>Описание задачи</label>
+      <textarea
+        id={`${id}-desc`}
+        name="description"
+        class="tf__textarea"
+        rows="4"
+        placeholder="Например: дверца перекосилась, петлю не могу найти. Или: хочу шкаф примерно как на втором фото."
+      ></textarea>
+
+      <div class="tf__voice" data-voice hidden>
+        <button type="button" class="tf__voice-btn" data-voice-toggle>
+          <span class="tf__voice-dot" aria-hidden="true"></span>
+          <span data-voice-label>Рассказать голосом</span>
+        </button>
+        <span class="tf__voice-time" data-voice-time hidden>0:00</span>
+        <button type="button" class="tf__voice-clear" data-voice-clear hidden>Удалить</button>
+        <p class="tf__hint tf__voice-hint">
+          Не нужно знать мебельные термины. Скажите, что хотите сделать и
+          что сейчас не так. До {maxVoiceSeconds} секунд.
+        </p>
+        <audio class="tf__voice-play" data-voice-audio controls hidden></audio>
+      </div>
+    </fieldset>
+
+    <div class="tf__nav">
+      <button type="button" class="btn btn--ghost" data-prev>Назад</button>
+      <button type="button" class="btn" data-next>Дальше</button>
+    </div>
+  </section>
+
+  <!-- ================= Step 4 ================= -->
+  <section class="tf__step" data-step="4">
+    <fieldset class="tf__fieldset">
+      <legend class="tf__legend">
+        <span class="tf__step-no">4</span>
+        Как с вами связаться?
+      </legend>
+
+      <div class="tf__field">
+        <label for={`${id}-phone`}>Телефон</label>
+        <input
+          type="tel"
+          id={`${id}-phone`}
+          name="phone"
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="+7"
+          required
+          aria-describedby={`${id}-phone-err`}
+          data-phone
+        />
+        <p class="tf__err" id={`${id}-phone-err`} data-err="phone"></p>
+      </div>
+
+      <div class="tf__field">
+        <label for={`${id}-name`}>Как к вам обращаться <span class="tf__opt">— необязательно</span></label>
+        <input type="text" id={`${id}-name`} name="name" autocomplete="given-name" />
+      </div>
+
+      <fieldset class="tf__field tf__prefs">
+        <legend>Как удобнее?</legend>
+        <div class="tf__chips">
+          <label class="tf__chip">
+            <input type="radio" name="preferred_contact" value="call" checked />
+            <span>Позвонить</span>
+          </label>
+          <label class="tf__chip">
+            <input type="radio" name="preferred_contact" value="message" />
+            <span>Написать</span>
+          </label>
+          <label class="tf__chip">
+            <input type="radio" name="preferred_contact" value="any" />
+            <span>Всё равно</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <label class="tf__consent">
+        <input type="checkbox" name="consent" value="yes" required data-consent />
+        <span>
+          Согласен на обработку персональных данных для ответа на обращение —
+          <a href="/soglasie/" target="_blank" rel="noopener">текст согласия</a>,
+          <a href="/privacy/" target="_blank" rel="noopener">политика</a>.
+        </span>
+      </label>
+      <p class="tf__err" data-err="consent"></p>
+    </fieldset>
+
+    <div class="tf__nav">
+      <button type="button" class="btn btn--ghost" data-prev>Назад</button>
+      <button type="submit" class="btn btn--accent" data-submit>
+        <span data-submit-label>Отправить задачу</span>
+      </button>
+    </div>
+
+    <p class="tf__aside tf__aside--legal">
+      Фотографии и описание нужны только для ответа на ваше обращение.
+    </p>
+  </section>
+
+  <!-- ================= Done ================= -->
+  <section class="tf__step tf__done" data-step="done">
+    <div class="tf__done-mark" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><path d="M13 24.5 20.5 32 35 17" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h3>Задача отправлена</h3>
+    <p>
+      Посмотрим фотографии и свяжемся с вами, чтобы уточнить детали.
+      Если что-то срочное — можно позвонить.
+    </p>
+    <div class="tf__done-actions">
+      <a class="btn btn--ghost" href="/proekty/">Посмотреть работы</a>
+    </div>
+  </section>
+
+  <!-- ================= Failure ================= -->
+  <section class="tf__step tf__fail" data-step="error">
+    <h3>Не получилось отправить</h3>
+    <p data-error-text>Что-то пошло не так по дороге. Попробуйте ещё раз или позвоните.</p>
+    <div class="tf__done-actions">
+      <button type="button" class="btn" data-retry>Попробовать ещё раз</button>
+    </div>
+  </section>
+</form>
+
+<style>
+  .tf {
+    --tf-gap: var(--sp-5);
+    display: grid;
+    gap: var(--tf-gap);
+  }
+
+  .tf__trap {
+    position: absolute !important;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .tf__heading {
+    font-size: var(--step-3);
+    margin: 0;
+  }
+
+  /* ---- Progress ---- */
+  .tf__progress {
+    display: none;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  :global(html.js) .tf__progress { display: flex; }
+  .tf__progress li {
+    height: 3px;
+    flex: 1;
+    background: var(--line);
+    border-radius: 2px;
+    transition: background-color var(--dur-2) var(--ease);
+  }
+  .tf__progress li[data-state='done'] { background: var(--accent); }
+  .tf__progress li[data-state='current'] { background: var(--ink); }
+
+  /* ---- Steps ---- */
+  .tf__step { display: grid; gap: var(--sp-5); }
+  /* Without JS every step is visible and the form posts natively. */
+  :global(html.js) .tf__step { display: none; }
+  :global(html.js) .tf__step[data-active] { display: grid; }
+  .tf__done,
+  .tf__fail { display: none; }
+  :global(html:not(.js)) .tf__done,
+  :global(html:not(.js)) .tf__fail { display: none; }
+
+  .tf__fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: var(--sp-3); }
+
+  .tf__legend {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0;
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+    color: var(--ink);
+  }
+
+  .tf__step-no {
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    flex: none;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .tf__hint {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .tf__aside {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--paper-sunken);
+    border-radius: var(--r-md);
+    margin: 0;
+  }
+  .tf__aside--legal { background: none; padding: 0; font-size: var(--step--2); }
+
+  /* ---- Type cards ---- */
+  .tf__types {
+    display: grid;
+    gap: 0.5rem;
+    margin-block-start: var(--sp-2);
+  }
+  @media (min-width: 30rem) {
+    .tf__types { grid-template-columns: 1fr 1fr; }
+  }
+
+  .tf__type { position: relative; display: block; cursor: pointer; }
+  .tf__type input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .tf__type-body {
+    display: grid;
+    gap: 0.15rem;
+    height: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--paper-raised);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-md);
+    transition: border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+  }
+  .tf__type:hover .tf__type-body { border-color: var(--line-strong); }
+  .tf__type input:checked + .tf__type-body {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .tf__type input:focus-visible + .tf__type-body {
+    outline: 2.5px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .tf__type-label { font-weight: 600; font-size: var(--step-0); line-height: 1.3; }
+  .tf__type-note { font-size: var(--step--2); color: var(--ink-3); }
+
+  /* ---- Upload ---- */
+  .tf__drop { position: relative; }
+  .tf__file {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .tf__drop-face {
+    display: grid;
+    justify-items: center;
+    gap: 0.4rem;
+    padding: var(--sp-6) var(--sp-4);
+    text-align: center;
+    background: var(--paper-sunken);
+    border: 1.5px dashed var(--line-strong);
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    transition: border-color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+  }
+  .tf__drop:hover .tf__drop-face,
+  .tf__drop[data-dragover] .tf__drop-face {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .tf__file:focus-visible + .tf__drop-face {
+    outline: 2.5px solid var(--focus);
+    outline-offset: 2px;
+  }
+  .tf__drop--sm .tf__drop-face { padding: var(--sp-4); }
+
+  .tf__drop-icon { width: 2.1rem; color: var(--ink-3); }
+  .tf__drop-title { font-family: var(--font-display); font-weight: 650; font-size: var(--step-0); }
+  .tf__drop-note { font-size: var(--step--2); color: var(--ink-3); max-width: 30ch; line-height: 1.45; }
+
+  .tf__thumbs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+    gap: 0.45rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .tf__thumbs:empty { display: none; }
+  .tf__thumbs :global(li) {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--paper-sunken);
+    border: 1px solid var(--line);
+  }
+  .tf__thumbs :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .tf__thumbs :global(.tf__thumb-x) {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 1.4rem;
+    height: 1.4rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgb(23 22 25 / 0.72);
+    color: #fff;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+  .tf__thumbs :global(.tf__thumb-bad) {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    padding: 0.3rem;
+    font-size: 0.6rem;
+    text-align: center;
+    color: var(--ink-3);
+  }
+
+  .tf__more {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 0.75rem 1rem;
+    display: grid;
+    gap: var(--sp-3);
+  }
+  .tf__more summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: var(--step--1);
+    list-style-position: inside;
+  }
+  .tf__more[open] summary { margin-block-end: 0.2rem; }
+
+  /* ---- Text ---- */
+  .tf__textarea,
+  .tf__field input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: var(--paper-raised);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-md);
+    font-size: var(--step-0);
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color var(--dur-1) var(--ease);
+  }
+  .tf__textarea:focus,
+  .tf__field input:focus { border-color: var(--ink); }
+  .tf__textarea::placeholder { color: var(--ink-3); }
+
+  .tf__field { display: grid; gap: 0.35rem; border: 0; padding: 0; margin: 0; }
+  .tf__field > label,
+  .tf__field > legend {
+    font-size: var(--step--1);
+    font-weight: 600;
+    padding: 0;
+  }
+  .tf__opt { font-weight: 400; color: var(--ink-3); }
+
+  .tf__field input[aria-invalid='true'] { border-color: #b91c1c; }
+  .tf__err {
+    font-size: var(--step--2);
+    color: #b91c1c;
+    margin: 0;
+    min-height: 0;
+  }
+  .tf__err:empty { display: none; }
+
+  .tf__chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tf__chip { position: relative; }
+  .tf__chip input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .tf__chip span {
+    display: block;
+    padding: 0.5rem 0.95rem;
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-pill);
+    font-size: var(--step--1);
+    font-weight: 550;
+    cursor: pointer;
+  }
+  .tf__chip input:checked + span {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--ink-invert);
+  }
+  .tf__chip input:focus-visible + span { outline: 2.5px solid var(--focus); outline-offset: 2px; }
+
+  .tf__consent {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.65rem;
+    align-items: start;
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .tf__consent input {
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-block-start: 0.15rem;
+    accent-color: var(--accent);
+  }
+  .tf__consent a { color: var(--ink); }
+
+  /* ---- Voice ---- */
+  .tf__voice {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: start;
+    padding: var(--sp-4);
+    background: var(--paper-sunken);
+    border-radius: var(--r-md);
+  }
+  .tf__voice-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.6rem 1.1rem;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    font-weight: 600;
+    font-size: var(--step--1);
+  }
+  .tf__voice-btn[data-recording] { border-color: var(--accent); color: var(--accent-ink); }
+  .tf__voice-dot {
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .tf__voice-btn[data-recording] .tf__voice-dot { animation: pulse 1.1s infinite var(--ease-in-out); }
+  @keyframes pulse { 50% { opacity: 0.25; transform: scale(0.8); } }
+  .tf__voice-time { font-family: var(--font-mono); font-size: var(--step--1); color: var(--ink-2); }
+  .tf__voice-clear {
+    font-size: var(--step--2);
+    color: var(--ink-3);
+    text-decoration: underline;
+  }
+  .tf__voice-hint { max-width: 42ch; }
+  .tf__voice-play { width: 100%; max-width: 20rem; }
+
+  /* ---- Nav ---- */
+  .tf__nav { display: flex; gap: 0.6rem; }
+  .tf__nav .btn { flex: 1; }
+  .tf__nav .btn--ghost { flex: 0 1 auto; min-width: 6rem; }
+  :global(html:not(.js)) .tf__nav { display: none; }
+  /* Native submit for the no-JS path. */
+  :global(html:not(.js)) .tf__step[data-step='4'] .tf__nav {
+    display: flex;
+  }
+  :global(html:not(.js)) .tf__step[data-step='4'] .tf__nav .btn--ghost { display: none; }
+
+  /* ---- Terminal states ---- */
+  :global(html.js) .tf__done[data-active],
+  :global(html.js) .tf__fail[data-active] {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-4);
+    padding-block: var(--sp-4);
+  }
+  .tf__done-mark {
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    height: 3.4rem;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+  .tf__done-mark svg { width: 1.9rem; }
+  .tf__done h3, .tf__fail h3 { font-size: var(--step-3); }
+  .tf__done p, .tf__fail p { color: var(--ink-2); max-width: 44ch; }
+  .tf__done-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+  .tf--compact { --tf-gap: var(--sp-4); }
+</style>

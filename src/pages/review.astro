@@ -1,0 +1,223 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import { OPEN_QUESTIONS, STATUS_LABEL, type FactStatus } from '~/lib/facts';
+import { registry } from '~/lib/photo';
+
+/**
+ * Internal checklist. noindex, excluded from the sitemap, linked only from
+ * the review-build banner. Its job is to give the owner a single page to
+ * walk through with the master.
+ */
+
+type Row = { where: string; what: string; status: FactStatus };
+const rows: Row[] = [];
+
+for (const s of await getCollection('services')) {
+  const at = `/${s.id}/`;
+  if (s.data.status !== 'fact') rows.push({ where: at, what: `Страница целиком: ${s.data.title}`, status: s.data.status });
+  s.data.examples.forEach((e) => {
+    if (e.status !== 'fact') rows.push({ where: at, what: `Пример работы: «${e.title}»`, status: e.status });
+  });
+  s.data.faq.forEach((f) => {
+    if (f.status !== 'fact') rows.push({ where: at, what: `Вопрос: «${f.q}»`, status: f.status });
+  });
+}
+for (const f of await getCollection('faq')) {
+  if (f.data.status !== 'fact') rows.push({ where: '/faq/', what: `Вопрос: «${f.data.q}»`, status: f.data.status });
+}
+for (const a of await getCollection('areas')) {
+  if (a.data.status !== 'fact') rows.push({ where: '/kontakty/', what: `Район обслуживания: ${a.data.name}`, status: a.data.status });
+}
+for (const j of await getCollection('journal')) {
+  if (j.data.status !== 'fact') rows.push({ where: `/journal/${j.id}/`, what: `Статья: ${j.data.title}`, status: j.data.status });
+}
+
+const projects = await getCollection('projects');
+const placeholders = projects.filter((p) => p.data.placeholder);
+
+const photos = [...registry.values()].sort((a, b) => a.name.localeCompare(b.name));
+const byArea = OPEN_QUESTIONS.reduce<Record<string, typeof OPEN_QUESTIONS>>((acc, q) => {
+  (acc[q.area] ||= []).push(q);
+  return acc;
+}, {});
+---
+
+<Base
+  title="Что нужно уточнить"
+  description="Служебная страница: список вопросов к мастеру и неподтверждённых утверждений."
+  canonical="/review/"
+  noindex
+  hideStickyCta
+>
+  <div class="container rv">
+    <header class="rv__head">
+      <p class="eyebrow">Служебная страница</p>
+      <h1>Что нужно уточнить</h1>
+      <p class="lede">
+        Всё, что сайт пока не утверждает, потому что это не подтверждено.
+        Пройдите список с мастером — каждый ответ снимает одну блокировку.
+      </p>
+      <p class="rv__hint">
+        Чтобы увидеть непубликуемые пункты прямо на страницах, соберите сайт
+        в режиме проверки: <code>PUBLIC_SHOW_UNCONFIRMED=true npm run build</code>
+      </p>
+    </header>
+
+    <section class="rv__section">
+      <h2>Вопросы к мастеру</h2>
+      {
+        Object.entries(byArea).map(([area, list]) => (
+          <div class="rv__area">
+            <h3>{area}</h3>
+            <ol class="rv__questions">
+              {list.map((q) => (
+                <li>
+                  <p class="rv__q">{q.question}</p>
+                  <p class="rv__blocks"><span>Что блокирует:</span> {q.blocks}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+    </section>
+
+    <section class="rv__section">
+      <h2>Неподтверждённые утверждения в контенте <span class="rv__count">{rows.length}</span></h2>
+      {
+        rows.length === 0 ? (
+          <p class="rv__empty">Все пункты подтверждены.</p>
+        ) : (
+          <div class="scroll-x">
+            <table class="rv__table">
+              <thead>
+                <tr><th>Страница</th><th>Что именно</th><th>Статус</th></tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr>
+                    <td><a href={r.where}>{r.where}</a></td>
+                    <td>{r.what}</td>
+                    <td><span class="rv__badge" data-s={r.status}>{STATUS_LABEL[r.status]}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </section>
+
+    <section class="rv__section">
+      <h2>Демонстрационные работы <span class="rv__count">{placeholders.length}</span></h2>
+      <p class="rv__note">
+        Эти страницы помечены как шаблоны, закрыты от индексации и не
+        попадают в sitemap. Заменяйте их настоящими работами по одной:
+        поставьте <code>placeholder: false</code> и загрузите реальные фото.
+      </p>
+      <ul class="rv__list">
+        {placeholders.map((p) => (
+          <li><a href={`/proekty/${p.id}/`}>{p.data.title}</a> <code>src/content/projects/{p.id}.md</code></li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="rv__section">
+      <h2>Фотографии <span class="rv__count">{photos.length}</span></h2>
+      <p class="rv__note">
+        Полный список слотов с брифами — в <code>docs/PHOTO-BRIEF.md</code>.
+        Чтобы заменить заглушку, положите файл
+        <code>public/photo/&lt;имя&gt;.webp</code> — вёрстку менять не нужно.
+      </p>
+      <div class="scroll-x">
+        <table class="rv__table">
+          <thead><tr><th>Имя файла</th><th>Пропорции</th><th>Где используется</th></tr></thead>
+          <tbody>
+            {photos.map((p) => (
+              <tr>
+                <td><code>{p.name}.webp</code></td>
+                <td>{p.ratio}</td>
+                <td class="rv__where">{p.where}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .rv { padding-block: var(--sp-6) var(--sp-9); max-width: 62rem; }
+  .rv__head { display: grid; gap: var(--sp-4); margin-block-end: var(--sp-8); }
+  .rv__head h1 { font-size: var(--step-5); }
+  .rv__hint { font-size: var(--step--1); color: var(--ink-3); }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--paper-sunken);
+    padding: 0.12em 0.4em;
+    border-radius: var(--r-sm);
+  }
+
+  .rv__section { margin-block-end: var(--sp-8); }
+  .rv__section > h2 {
+    font-size: var(--step-2);
+    padding-block-end: var(--sp-3);
+    border-block-end: 1px solid var(--line);
+    margin-block-end: var(--sp-5);
+  }
+
+  .rv__count {
+    display: inline-block;
+    margin-inline-start: 0.4rem;
+    padding: 0.1rem 0.55rem;
+    border-radius: var(--r-pill);
+    background: var(--paper-sunken);
+    font-size: var(--step--1);
+    font-family: var(--font-mono);
+    color: var(--ink-3);
+    vertical-align: middle;
+  }
+
+  .rv__area { margin-block-end: var(--sp-5); }
+  .rv__area h3 {
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-3);
+  }
+
+  .rv__questions { display: grid; gap: var(--sp-4); padding-inline-start: 1.3em; }
+  .rv__questions li::marker { color: var(--accent); font-weight: 700; }
+  .rv__q { font-weight: 600; font-size: var(--step-0); }
+  .rv__blocks { font-size: var(--step--1); color: var(--ink-3); margin-block-start: 0.25rem; line-height: 1.5; }
+  .rv__blocks span { font-weight: 600; }
+
+  .rv__table { width: 100%; border-collapse: collapse; font-size: var(--step--1); min-width: 40rem; }
+  .rv__table :is(th, td) {
+    text-align: start;
+    padding: 0.6rem 0.7rem;
+    border-block-end: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .rv__table th { color: var(--ink-3); font-weight: 600; font-size: var(--step--2); text-transform: uppercase; letter-spacing: 0.04em; }
+  .rv__where { color: var(--ink-3); font-size: var(--step--2); }
+
+  .rv__badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--r-pill);
+    font-size: var(--step--2);
+    white-space: nowrap;
+  }
+  .rv__badge[data-s='hypothesis'] { background: color-mix(in srgb, #d97706 22%, transparent); }
+  .rv__badge[data-s='needs-confirmation'] { background: color-mix(in srgb, #dc2626 18%, transparent); }
+
+  .rv__note { font-size: var(--step--1); color: var(--ink-2); line-height: 1.6; margin-block-end: var(--sp-4); max-width: 60ch; }
+  .rv__list { display: grid; gap: 0.5rem; padding-inline-start: 1.1em; font-size: var(--step--1); }
+  .rv__empty { color: var(--ink-3); }
+</style>

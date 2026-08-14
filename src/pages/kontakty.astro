@@ -1,0 +1,235 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import UnconfirmedNote from '~/components/UnconfirmedNote.astro';
+import { site, publicContacts } from '~/data/site';
+import { isPublic, SHOW_UNCONFIRMED } from '~/lib/facts';
+
+const areas = (await getCollection('areas')).sort((a, b) => a.data.order - b.data.order);
+const publicAreas = areas.filter((a) => isPublic(a.data.status));
+const messengers = site.messengers.filter((m) => m.publish && m.href);
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Контакты', href: '/kontakty/' },
+];
+---
+
+<Base
+  title="Контакты"
+  description="Как связаться с мастерской: телефон для заявок и форма «показать задачу». Напишите, где находится мебель, — ответим, сможем ли приехать."
+  canonical="/kontakty/"
+  breadcrumb={trail}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="container kn__head">
+    <h1>Контакты</h1>
+    <p class="lede">
+      Самый быстрый способ — показать задачу фотографией. Но можно и просто
+      позвонить.
+    </p>
+  </header>
+
+  <section class="container kn__grid">
+    <div class="kn__contacts">
+      {
+        publicContacts.map((c) => (
+          <div class="kn__card">
+            <p class="kn__role">{c.role}{c.name ? ` · ${c.name}` : ''}</p>
+            <a class="kn__phone" href={`tel:${c.tel}`} data-track="phone_click" data-track-where="contacts">
+              {c.phone}
+            </a>
+            {c.note && <p class="kn__note">{c.note}</p>}
+          </div>
+        ))
+      }
+
+      {
+        messengers.length > 0 && (
+          <div class="kn__card">
+            <p class="kn__role">Мессенджеры</p>
+            <div class="kn__msg">
+              {messengers.map((m) => (
+                <a class="btn btn--ghost" href={m.href!} data-track="messenger_click" data-track-where="contacts">
+                  {m.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        )
+      }
+
+      <div class="kn__card kn__card--cta">
+        <p class="kn__role">Заявка с фотографией</p>
+        <p class="kn__cta-text">
+          Загрузите фото, опишите в двух словах и оставьте телефон.
+          Название детали знать не нужно.
+        </p>
+        <button class="btn btn--accent" type="button" data-open-task data-cta="contacts">
+          Показать задачу
+        </button>
+      </div>
+    </div>
+
+    <div class="kn__info">
+      <section class="kn__block">
+        <h2>Где мы работаем</h2>
+        {
+          publicAreas.length > 0 ? (
+            <ul class="kn__areas">
+              {publicAreas.map((a) => <li>{a.data.name}</li>)}
+            </ul>
+          ) : (
+            <p>
+              Мастерская находится в {site.region}. Точная география выезда
+              на замер и монтаж уточняется — напишите, где находится мебель,
+              и мы честно ответим, сможем ли приехать.
+            </p>
+          )
+        }
+        {
+          SHOW_UNCONFIRMED &&
+            areas
+              .filter((a) => !isPublic(a.data.status))
+              .map((a) => <UnconfirmedNote status={a.data.status} note={a.data.name} />)
+        }
+      </section>
+
+      <section class="kn__block">
+        <h2>Адрес мастерской</h2>
+        {
+          isPublic(site.address.status) && site.address.streetAddress ? (
+            <p>{site.address.streetAddress}, {site.address.locality}</p>
+          ) : (
+            <p>
+              Адрес мастерской мы не публикуем: это рабочее помещение, а не
+              салон, и приём посетителей там пока не организован. Всё, что
+              нужно для начала работы, решается по фотографиям и телефону.
+            </p>
+          )
+        }
+        <UnconfirmedNote
+          status={site.address.status}
+          note="Публиковать адрес или нет — решает мастер (см. /review/)."
+        />
+      </section>
+
+      <section class="kn__block">
+        <h2>Что происходит после заявки</h2>
+        <ol class="kn__steps">
+          <li>Заявку читает человек, а не автоответчик.</li>
+          <li>Если по фотографиям непонятно — задаём один-два вопроса.</li>
+          <li>Задача уходит мастеру уже в понятном виде.</li>
+          <li>Отвечаем, что можно сделать и что на это влияет.</li>
+        </ol>
+        <p class="kn__small">
+          Конкретный срок ответа мы не обещаем, пока не сможем его выдержать.
+        </p>
+      </section>
+    </div>
+  </section>
+
+  <ShowTask tone="ink" />
+</Base>
+
+<style>
+  .kn__head {
+    padding-block: var(--sp-6) var(--sp-7);
+    max-width: 40rem;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .kn__head h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+
+  .kn__grid {
+    display: grid;
+    gap: var(--sp-7);
+    padding-block-end: var(--sp-6);
+    align-items: start;
+  }
+
+  .kn__contacts { display: grid; gap: var(--sp-4); }
+
+  .kn__card {
+    padding: var(--sp-5);
+    background: var(--paper-sunken);
+    border-radius: var(--r-lg);
+  }
+
+  .kn__role {
+    font-size: var(--step--2);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-2);
+  }
+
+  .kn__phone {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--step-4);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+    text-decoration: none;
+  }
+  .kn__phone:hover { color: var(--accent-ink); }
+
+  .kn__note {
+    margin-block-start: var(--sp-3);
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  .kn__msg { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+  .kn__card--cta { background: var(--accent-soft); display: grid; gap: var(--sp-3); justify-items: start; }
+  /* --ink-3 only reaches 4.46:1 on the accent tint — step up one level. */
+  .kn__card--cta .kn__role { color: var(--ink-2); }
+  .kn__cta-text { font-size: var(--step--1); color: var(--ink-2); line-height: 1.5; }
+
+  .kn__info { display: grid; gap: var(--sp-6); }
+
+  .kn__block h2 { font-size: var(--step-1); margin-block-end: var(--sp-3); }
+  .kn__block p { color: var(--ink-2); line-height: 1.6; max-width: 52ch; font-size: var(--step--1); }
+
+  .kn__areas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .kn__areas li {
+    padding: 0.3rem 0.8rem;
+    background: var(--paper-sunken);
+    border-radius: var(--r-pill);
+    font-size: var(--step--1);
+  }
+
+  .kn__steps {
+    display: grid;
+    gap: 0.5rem;
+    padding-inline-start: 1.2em;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.5;
+    max-width: 52ch;
+  }
+  .kn__steps li::marker { color: var(--accent); font-weight: 700; }
+
+  .kn__small {
+    margin-block-start: var(--sp-3);
+    font-size: var(--step--2) !important;
+    color: var(--ink-3) !important;
+  }
+
+  @media (min-width: 62rem) {
+    .kn__grid { grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: var(--sp-8); }
+  }
+</style>

@@ -1,0 +1,164 @@
+---
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import TaskForm from '~/components/TaskForm.astro';
+import { primaryContact, site } from '~/data/site';
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Показать задачу', href: '/pokazat-zadachu/' },
+];
+---
+
+<Base
+  title="Показать задачу"
+  description="Покажите, что нужно сделать: загрузите фотографию, опишите словами или запишите голосовое. Название детали знать не обязательно."
+  canonical="/pokazat-zadachu/"
+  breadcrumb={trail}
+  hideStickyCta
+>
+  <Breadcrumbs trail={trail} />
+
+  <div class="container pz">
+    <div class="pz__form">
+      <header class="pz__head">
+        <h1>Покажите, что нужно сделать</h1>
+        <p class="lede">
+          Четыре коротких шага. Обязателен только телефон — всё остальное
+          можно пропустить.
+        </p>
+      </header>
+
+      <TaskForm id="task-page" />
+    </div>
+
+    <aside class="pz__side">
+      <section class="pz__card">
+        <h2>Что помогает больше всего</h2>
+        <ul>
+          <li>общий кадр — мебель или место целиком</li>
+          <li>крупный кадр — то, что сломалось или не подходит</li>
+          <li>что-нибудь рядом для масштаба: линейка, монета</li>
+          <li>короткое видео, если что-то заедает или не закрывается</li>
+        </ul>
+      </section>
+
+      <section class="pz__card">
+        <h2>Чего не нужно</h2>
+        <ul>
+          <li>знать название детали или механизма</li>
+          <li>измерять точно — хватит «примерно два метра»</li>
+          <li>формулировать задачу «правильно»</li>
+          <li>переснимать фото по десять раз</li>
+        </ul>
+      </section>
+
+      {
+        primaryContact && (
+          <section class="pz__card pz__card--call">
+            <h2>Проще позвонить?</h2>
+            <a
+              class="pz__phone"
+              href={`tel:${primaryContact.tel}`}
+              data-track="phone_click"
+              data-track-where="task_page"
+            >
+              {primaryContact.phone}
+            </a>
+            <p>{primaryContact.role}{primaryContact.name ? ` · ${primaryContact.name}` : ''}</p>
+            {primaryContact.note && <p class="pz__note">{primaryContact.note}</p>}
+          </section>
+        )
+      }
+
+      {
+        !site.leadEndpoint && (
+          <section class="pz__card pz__card--dev">
+            <h2>Приём заявок пока не подключён</h2>
+            <p>
+              Не задан адрес обработчика формы. Как это включить — в
+              <code>README.md</code>, раздел «Приём заявок».
+            </p>
+          </section>
+        )
+      }
+    </aside>
+  </div>
+</Base>
+
+<style>
+  .pz {
+    display: grid;
+    gap: var(--sp-7);
+    padding-block: var(--sp-6) var(--sp-9);
+    align-items: start;
+  }
+
+  .pz__head { margin-block-end: var(--sp-6); display: grid; gap: var(--sp-4); }
+  .pz__head h1 { font-size: var(--step-5); line-height: var(--lh-display); }
+
+  .pz__form {
+    padding: var(--sp-5);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--r-xl);
+  }
+
+  .pz__side { display: grid; gap: var(--sp-4); }
+
+  .pz__card {
+    padding: var(--sp-5);
+    background: var(--paper-sunken);
+    border-radius: var(--r-lg);
+  }
+  .pz__card h2 {
+    font-size: var(--step-0);
+    font-weight: 650;
+    margin-block-end: var(--sp-3);
+  }
+  .pz__card ul {
+    display: grid;
+    gap: 0.4rem;
+    padding-inline-start: 1.1em;
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+  .pz__card li::marker { color: var(--accent); }
+  .pz__card p { font-size: var(--step--1); color: var(--ink-2); }
+
+  .pz__phone {
+    display: block;
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+    text-decoration: none;
+    margin-block-end: 0.2rem;
+  }
+  .pz__phone:hover { color: var(--accent-ink); }
+  .pz__note { margin-block-start: var(--sp-3); color: var(--ink-3) !important; }
+
+  .pz__card--dev {
+    background: color-mix(in srgb, #b45309 12%, transparent);
+    border-inline-start: 3px solid #b45309;
+  }
+  .pz__card--dev code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--paper);
+    padding: 0.1em 0.35em;
+    border-radius: var(--r-sm);
+  }
+
+  @media (min-width: 46rem) {
+    .pz__form { padding: var(--sp-7); }
+  }
+
+  @media (min-width: 68rem) {
+    .pz {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+      gap: var(--sp-8);
+    }
+  }
+</style>

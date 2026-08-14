@@ -1,0 +1,78 @@
+---
+import Photo from './Photo.astro';
+
+interface Props {
+  href: string;
+  title: string;
+  text: string;
+  image?: { name: string; alt: string; brief?: string };
+  size?: 'md' | 'lg';
+}
+const { href, title, text, image, size = 'md' } = Astro.props;
+---
+
+<article class:list={['card', 'sc', `sc--${size}`]}>
+  {
+    image && (
+      <div class="sc__media">
+        <Photo
+          name={image.name}
+          alt={image.alt}
+          brief={image.brief}
+          ratio={size === 'lg' ? '3/2' : '4/3'}
+          rounded={false}
+          sizes="(min-width: 68rem) 33vw, (min-width: 34rem) 50vw, 100vw"
+        />
+      </div>
+    )
+  }
+  <div class="sc__body">
+    <h3 class="sc__title">
+      <a class="card__link" href={href} data-track="service_opened" data-track-where="service_card">
+        {title}
+      </a>
+    </h3>
+    <p class="sc__text">{text}</p>
+    <span class="sc__more" aria-hidden="true">Подробнее →</span>
+  </div>
+</article>
+
+<style>
+  .sc__media { overflow: hidden; }
+  .sc__media :global(.photo) {
+    transition: transform var(--dur-3) var(--ease);
+  }
+  .card:has(a:hover) .sc__media :global(.photo) { transform: scale(1.025); }
+
+  .sc__body {
+    display: grid;
+    gap: 0.4rem;
+    padding: var(--sp-5);
+    flex: 1;
+    align-content: start;
+  }
+
+  .sc__title {
+    font-size: var(--step-1);
+    font-weight: 650;
+  }
+  .sc__title a { text-decoration: none; }
+
+  .sc__text {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  .sc__more {
+    margin-block-start: auto;
+    padding-block-start: var(--sp-3);
+    font-size: var(--step--2);
+    font-weight: 600;
+    color: var(--accent-ink);
+    letter-spacing: 0.01em;
+  }
+
+  .sc--lg .sc__title { font-size: var(--step-2); }
+  .sc--lg .sc__body { padding: var(--sp-6); }
+</style>

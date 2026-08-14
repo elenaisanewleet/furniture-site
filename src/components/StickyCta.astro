@@ -1,0 +1,86 @@
+---
+import { primaryContact } from '~/data/site';
+---
+
+<!--
+  Persistent mobile action bar.
+  Sits above the fold's bottom edge without covering content — the footer
+  reserves `--sticky-cta-h` so nothing is ever hidden behind it. Hidden on
+  desktop, where the header CTA is always visible instead.
+-->
+<div class="sticky-cta no-print" data-sticky-cta role="region" aria-label="Быстрые действия">
+  <div class="sticky-cta__inner">
+    <button class="btn btn--accent sticky-cta__main" type="button" data-open-task data-cta="sticky">
+      <svg viewBox="0 0 20 20" aria-hidden="true" class="sticky-cta__icon">
+        <path d="M2.8 6.2h3l1.3-2h5.8l1.3 2h3v9.4H2.8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <circle cx="10" cy="10.6" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      Показать задачу
+    </button>
+    {
+      primaryContact && (
+        <a
+          class="sticky-cta__call"
+          href={`tel:${primaryContact.tel}`}
+          aria-label={`Позвонить: ${primaryContact.phone}`}
+          data-track="phone_click"
+          data-track-where="sticky"
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4.5 2.8h3l1.4 3.5-1.9 1.4a10.5 10.5 0 0 0 4.3 4.3l1.4-1.9 3.5 1.4v3a1.6 1.6 0 0 1-1.8 1.6C8.3 15.4 4.6 11.7 3 5.1A1.6 1.6 0 0 1 4.5 2.8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      )
+    }
+  </div>
+</div>
+
+<style>
+  .sticky-cta {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 0.55rem var(--gutter) calc(0.55rem + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--paper) 90%, transparent);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border-block-start: 1px solid var(--line);
+    /* Slides away while reading, returns the moment the user scrolls up. */
+    transform: translateY(110%);
+    transition: transform var(--dur-2) var(--ease);
+  }
+
+  :global(html.js) .sticky-cta[data-visible='true'] { transform: none; }
+  /* Without JS the bar is simply always present. */
+  :global(html:not(.js)) .sticky-cta { transform: none; }
+
+  .sticky-cta__inner {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 34rem;
+    margin-inline: auto;
+  }
+
+  .sticky-cta__main {
+    flex: 1;
+    min-height: 3.4rem;
+  }
+
+  .sticky-cta__icon { width: 1.15rem; flex: none; }
+
+  .sticky-cta__call {
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    flex: none;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--r-pill);
+    color: var(--ink);
+  }
+  .sticky-cta__call svg { width: 1.25rem; }
+  .sticky-cta__call:hover { border-color: var(--ink); }
+
+  @media (min-width: 60rem) {
+    .sticky-cta { display: none; }
+  }
+</style>

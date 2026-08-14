@@ -1,0 +1,136 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ProblemGrid from '~/components/ProblemGrid.astro';
+import PhotoIntake from '~/components/PhotoIntake.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import { isPublic } from '~/lib/facts';
+
+/**
+ * MODEL B entry point: for visitors who know the symptom, not the product.
+ * Every service page's own `problems` list is aggregated here, so this page
+ * grows automatically as services are added.
+ */
+const services = (await getCollection('services'))
+  .filter((s) => isPublic(s.data.status) && s.data.problems.length > 0)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Что случилось', href: '/chto-sluchilos/' },
+];
+---
+
+<Base
+  title="Что случилось с мебелью"
+  description="Найдите свою ситуацию обычными словами: сломалось, не закрывается, не помещается, отвалилась деталь. Дальше — просто покажите фото."
+  canonical="/chto-sluchilos/"
+  breadcrumb={trail}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="container cs__head">
+    <h1>Найдите свою ситуацию</h1>
+    <p class="lede">
+      Здесь нет мебельных терминов. Ищите фразу, похожую на то, что сказали
+      бы вслух. Нажмите — попадёте туда, где это разбирается.
+    </p>
+  </header>
+
+  <ProblemGrid title="Коротко" lede="Шесть самых частых случаев." compact />
+
+  <section class="section--sm">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Подробнее</p>
+        <h2>Всё, с чем к нам приходят</h2>
+        <p class="lede">
+          Формулировки настоящие — так люди и пишут. Если узнали свою, этого
+          уже достаточно.
+        </p>
+      </div>
+
+      <div class="cs__groups">
+        {
+          services.map((s) => (
+            <section class="cs__group">
+              <h3>
+                <a href={`/${s.id}/`}>{s.data.title}</a>
+              </h3>
+              <ul>
+                {s.data.problems.map((p) => (
+                  <li>
+                    <a href={`/${s.id}/`}>«{p}»</a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <PhotoIntake
+    title="Ничего не подходит?"
+    text="Так тоже бывает, и это не проблема. Сфотографируйте, что у вас происходит, — разберёмся вместе."
+  />
+
+  <ShowTask tone="ink" preset="unknown" />
+</Base>
+
+<style>
+  .cs__head {
+    padding-block: var(--sp-6) var(--sp-7);
+    max-width: 42rem;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .cs__head h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+
+  .cs__groups {
+    display: grid;
+    gap: var(--sp-6);
+  }
+
+  .cs__group h3 {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-block-end: var(--sp-2);
+    border-block-end: 1px solid var(--line);
+    margin-block-end: var(--sp-3);
+  }
+  .cs__group h3 a { text-decoration: none; }
+  .cs__group h3 a:hover { color: var(--accent-ink); }
+
+  .cs__group ul {
+    display: grid;
+    gap: 0.3rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .cs__group li a {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    background: var(--paper-sunken);
+    border-radius: var(--r-md);
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    text-decoration: none;
+    line-height: 1.4;
+    transition: background-color var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+  }
+  .cs__group li a:hover { background: var(--accent-soft); color: var(--ink); }
+
+  @media (min-width: 46rem) {
+    .cs__groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-6) var(--sp-7); }
+  }
+  @media (min-width: 72rem) {
+    .cs__groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>

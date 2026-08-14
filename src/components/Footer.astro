@@ -1,0 +1,196 @@
+---
+import Logo from './Logo.astro';
+import { catalogue, primary, footerLegal } from '~/data/nav';
+import { site, publicContacts } from '~/data/site';
+import { isPublic } from '~/lib/facts';
+
+const year = new Date().getFullYear();
+const areas = site.serviceAreas.filter((a) => isPublic(a.status));
+const messengers = site.messengers.filter((m) => m.publish && m.href);
+---
+
+<footer class="ftr">
+  <div class="container">
+    <div class="ftr__top">
+      <div class="ftr__brand">
+        <Logo href="/" />
+        <p class="ftr__pitch">
+          Мебель, фурнитура, ремонт и нестандартные детали.
+          Не нужно знать названия — покажите задачу, разберёмся вместе.
+        </p>
+        <button class="btn btn--accent" type="button" data-open-task data-cta="footer">
+          Показать задачу
+        </button>
+      </div>
+
+      <nav class="ftr__cols" aria-label="Разделы сайта">
+        {
+          catalogue.map((group) => (
+            <div class="ftr__col">
+              <h2 class="ftr__head">{group.label}</h2>
+              <ul>
+                {group.items.map((i) => (
+                  <li><a href={i.href}>{i.label}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+        <div class="ftr__col">
+          <h2 class="ftr__head">О мастерской</h2>
+          <ul>
+            {primary.map((i) => <li><a href={i.href}>{i.label}</a></li>)}
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="ftr__contact">
+      <div class="ftr__contact-main">
+        {
+          publicContacts.map((c) => (
+            <a class="ftr__phone" href={`tel:${c.tel}`} data-track="phone_click" data-track-where="footer">
+              <span class="ftr__phone-num">{c.phone}</span>
+              <span class="ftr__phone-role">{c.role}{c.name ? ` · ${c.name}` : ''}</span>
+            </a>
+          ))
+        }
+        {
+          messengers.length > 0 && (
+            <div class="ftr__msg">
+              {messengers.map((m) => (
+                <a class="btn btn--ghost" href={m.href!} data-track="messenger_click" data-track-where="footer">
+                  {m.label}
+                </a>
+              ))}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="ftr__geo">
+        <p class="ftr__geo-title">Где работаем</p>
+        {
+          areas.length > 0 ? (
+            <p>{areas.map((a) => a.name).join(' · ')}</p>
+          ) : (
+            <p>
+              {site.region}. Точная география выезда уточняется —
+              напишите, где находится мебель, и мы ответим, сможем ли приехать.
+            </p>
+          )
+        }
+      </div>
+    </div>
+
+    <div class="ftr__legal">
+      <p>© {year} {site.brand.name}</p>
+      <nav aria-label="Правовая информация">
+        <ul>
+          {footerLegal.map((i) => <li><a href={i.href}>{i.label}</a></li>)}
+        </ul>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .ftr {
+    margin-block-start: var(--section-y);
+    padding-block: var(--sp-8) calc(var(--sp-7) + var(--sticky-cta-h));
+    background: var(--paper-sunken);
+    border-block-start: 1px solid var(--line);
+    font-size: var(--step--1);
+  }
+
+  .ftr__top {
+    display: grid;
+    gap: var(--sp-7);
+  }
+
+  .ftr__brand { display: grid; gap: var(--sp-4); justify-items: start; }
+
+  .ftr__pitch {
+    max-width: 34ch;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+
+  .ftr__cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-6) var(--sp-5);
+  }
+
+  .ftr__head {
+    font-family: var(--font-display);
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-3);
+  }
+
+  .ftr__col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+  .ftr__col a { color: var(--ink-2); text-decoration: none; }
+  .ftr__col a:hover { color: var(--ink); text-decoration: underline; }
+
+  .ftr__contact {
+    display: grid;
+    gap: var(--sp-5);
+    margin-block-start: var(--sp-8);
+    padding-block-start: var(--sp-6);
+    border-block-start: 1px solid var(--line);
+  }
+
+  .ftr__contact-main { display: grid; gap: var(--sp-4); justify-items: start; }
+
+  .ftr__phone { display: grid; gap: 0.1rem; text-decoration: none; }
+  .ftr__phone-num {
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+    color: var(--ink);
+  }
+  .ftr__phone-role { color: var(--ink-3); }
+  .ftr__phone:hover .ftr__phone-num { color: var(--accent-ink); }
+
+  .ftr__msg { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .ftr__msg .btn { min-height: 2.6rem; padding: 0.45rem 1rem; font-size: var(--step--1); }
+
+  .ftr__geo { color: var(--ink-2); max-width: 44ch; }
+  .ftr__geo-title { color: var(--ink); font-weight: 650; margin-block-end: 0.3rem; }
+
+  .ftr__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3) var(--sp-5);
+    align-items: center;
+    justify-content: space-between;
+    margin-block-start: var(--sp-7);
+    padding-block-start: var(--sp-5);
+    border-block-start: 1px solid var(--line);
+    color: var(--ink-3);
+    font-size: var(--step--2);
+  }
+  .ftr__legal ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ftr__legal a { color: inherit; }
+
+  @media (min-width: 52rem) {
+    .ftr__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ftr__contact { grid-template-columns: 1fr 1fr; align-items: start; }
+  }
+
+  @media (min-width: 68rem) {
+    .ftr__top { grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: var(--sp-8); }
+  }
+</style>

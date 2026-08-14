@@ -1,0 +1,191 @@
+---
+import { resolve, register, ratioBox } from '~/lib/photo';
+
+interface Props {
+  name: string;
+  alt: string;
+  ratio?: string;
+  brief?: string;
+  where?: string;
+  /** Above-the-fold images opt out of lazy loading. */
+  priority?: boolean;
+  sizes?: string;
+  class?: string;
+  /** Rounded corners are the caller's choice, not baked in. */
+  rounded?: boolean;
+}
+
+const {
+  name,
+  alt,
+  ratio = '3/2',
+  brief,
+  where,
+  priority = false,
+  sizes = '(min-width: 68rem) 50vw, 100vw',
+  class: className = '',
+  rounded = true,
+} = Astro.props;
+
+register({ name, alt, ratio, brief, where: where ?? Astro.url.pathname });
+
+const src = resolve(name);
+const { w, h } = ratioBox(ratio);
+
+// Deterministic per-slot hatch angle, so a given slot always looks the same.
+const seed = [...name].reduce((a, c) => a + c.charCodeAt(0), 0);
+const angle = 26 + (seed % 5) * 13;
+---
+
+<figure
+  class:list={['photo', rounded && 'photo--rounded', !src && 'photo--empty', className]}
+  style={`--ratio:${ratio}; --hatch:${angle}deg`}
+  data-slot={name}
+>
+  {
+    src ? (
+      <img
+        src={src}
+        alt={alt}
+        width={w}
+        height={h}
+        sizes={sizes}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding={priority ? 'sync' : 'async'}
+        fetchpriority={priority ? 'high' : 'auto'}
+      />
+    ) : (
+      <div class="photo__ph" role="img" aria-label={alt}>
+        <svg class="photo__ph-icon" viewBox="0 0 48 40" aria-hidden="true">
+          <path
+            d="M3 10.5h8l3.6-5.5h18.8l3.6 5.5h8v25H3z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linejoin="round"
+          />
+          <circle cx="24" cy="22" r="8.4" fill="none" stroke="currentColor" stroke-width="2.2" />
+        </svg>
+        <p class="photo__ph-alt">{alt}</p>
+      </div>
+    )
+  }
+  {
+    !src && (
+      <figcaption class="photo__label">
+        <span class="photo__label-name">{name}.webp</span>
+        <span class="photo__label-note">фотография не загружена</span>
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .photo {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    background: var(--paper-sunken);
+    isolation: isolate;
+    container-type: inline-size;
+  }
+
+  .photo--rounded {
+    border-radius: var(--r-lg);
+  }
+
+  .photo :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: photo-in var(--dur-3) var(--ease) both;
+  }
+
+  @keyframes photo-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ---- Placeholder -------------------------------------------------------
+     Designed, not broken: a hatched plate carrying the alt text, so the
+     page still communicates what will be there. Replaced automatically the
+     moment a real file with this name lands in public/photo/.             */
+  .photo--empty {
+    border: 1px solid var(--line);
+  }
+  .photo--rounded.photo--empty {
+    border-radius: var(--r-lg);
+  }
+
+  .photo__ph {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 0.9rem;
+    height: 100%;
+    padding: clamp(1rem, 6%, 2.5rem);
+    padding-block-end: 2.6rem;
+    color: var(--ink-3);
+    text-align: center;
+    background-image: repeating-linear-gradient(
+      var(--hatch),
+      transparent 0 9px,
+      color-mix(in srgb, currentColor 13%, transparent) 9px 10px
+    );
+  }
+
+  .photo__ph-icon {
+    width: clamp(1.9rem, 13%, 3.1rem);
+    height: auto;
+    opacity: 0.5;
+  }
+
+  .photo__ph-alt {
+    max-width: 26ch;
+    font-size: var(--step--2);
+    line-height: 1.4;
+    color: var(--ink-3);
+    /* Long alt text must not push the icon out of a short slot. */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .photo__label {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.55rem;
+    padding: 0.45rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    line-height: 1.3;
+    color: var(--ink-3);
+    background: color-mix(in srgb, var(--paper) 80%, transparent);
+    border-block-start: 1px solid var(--line);
+    backdrop-filter: blur(3px);
+  }
+
+  .photo__label-name {
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+
+  .photo__label-note {
+    opacity: 0.8;
+  }
+
+  /* Very small slots: drop the alt text, keep the icon and the file name. */
+  @container (max-width: 11rem) {
+    .photo__ph-alt { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .photo :global(img) { animation: none; }
+  }
+</style>

@@ -1,0 +1,141 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import Photo from '~/components/Photo.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import RelatedLinks from '~/components/RelatedLinks.astro';
+import { isPublic } from '~/lib/facts';
+import { article as articleSchema } from '~/lib/schema';
+
+export async function getStaticPaths() {
+  const all = await getCollection('journal');
+  return all
+    .filter((a) => isPublic(a.data.status))
+    .map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'journal'>;
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const services = await getCollection('services');
+const byId = new Map(services.map((s) => [s.id, s]));
+const journal = await getCollection('journal');
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Журнал', href: '/journal/' },
+  { name: d.title, href: `/journal/${entry.id}/` },
+];
+
+const serviceItems = d.services
+  .map((slug) => byId.get(slug))
+  .filter((s): s is CollectionEntry<'services'> => !!s && isPublic(s.data.status))
+  .map((s) => ({ label: s.data.title, href: `/${s.id}/`, note: s.data.short }));
+
+const relatedItems = d.related
+  .map((slug) => journal.find((j) => j.id === slug))
+  .filter((j) => !!j && isPublic(j!.data.status))
+  .map((j) => ({ label: j!.data.title, href: `/journal/${j!.id}/`, note: j!.data.answer }));
+
+const origin = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const dtf = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<Base
+  title={d.seoTitle}
+  description={d.seoDescription}
+  canonical={`/journal/${entry.id}/`}
+  noindex={d.noindex}
+  breadcrumb={trail}
+  schema={[
+    articleSchema(origin, {
+      headline: d.h1,
+      description: d.seoDescription,
+      url: `/journal/${entry.id}/`,
+      datePublished: d.date,
+      dateModified: d.updated,
+    }),
+  ]}
+>
+  <Breadcrumbs trail={trail} />
+
+  <article class="ar">
+    <header class="container ar__head">
+      <h1>{d.h1}</h1>
+      <p class="ar__answer">{d.answer}</p>
+      <p class="ar__meta">
+        <time datetime={d.date.toISOString()}>{dtf.format(d.updated ?? d.date)}</time>
+      </p>
+    </header>
+
+    {
+      d.hero && (
+        <div class="container ar__hero">
+          <Photo
+            name={d.hero.name}
+            alt={d.hero.alt}
+            brief={d.hero.brief}
+            ratio={d.hero.ratio}
+            priority
+            sizes="(min-width: 62rem) 62vw, 100vw"
+          />
+        </div>
+      )
+    }
+
+    <div class="container">
+      <div class="prose ar__body">
+        <Content />
+      </div>
+
+      <ShowTask
+        variant="inline"
+        title={d.cta?.title ?? 'Не хотите разбираться самостоятельно?'}
+        text={d.cta?.text ?? 'Пришлите фотографию — посмотрим и скажем, что с этим делать.'}
+        preset={d.cta?.preset}
+        button="Показать задачу"
+      />
+
+      <div class="ar__links">
+        <RelatedLinks title="К чему это относится" items={serviceItems} />
+        <RelatedLinks title="Ещё по теме" items={relatedItems} columns={2} />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .ar { padding-block-start: var(--sp-6); }
+
+  .ar__head { max-width: var(--container-prose); }
+  .ar__head h1 { font-size: var(--step-5); line-height: var(--lh-display); }
+
+  .ar__answer {
+    margin-block-start: var(--sp-5);
+    padding: var(--sp-4) var(--sp-5);
+    background: var(--accent-soft);
+    border-radius: var(--r-md);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink);
+  }
+
+  .ar__meta {
+    margin-block-start: var(--sp-4);
+    font-size: var(--step--2);
+    color: var(--ink-3);
+  }
+
+  .ar__hero { margin-block: var(--sp-7); }
+  .ar__hero :global(.photo) { max-width: 52rem; }
+
+  .ar__body { margin-block-start: var(--sp-6); }
+
+  .ar__links { max-width: var(--container-prose); padding-block-end: var(--sp-6); }
+</style>

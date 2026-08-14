@@ -1,0 +1,151 @@
+---
+import Photo from './Photo.astro';
+
+/**
+ * Before/after comparison.
+ * Ships as two stacked images + a range input, so it is meaningful with no
+ * JS, keyboard-operable, and announced by screen readers.
+ */
+interface Props {
+  before: { name: string; alt: string; brief?: string };
+  after: { name: string; alt: string; brief?: string };
+  ratio?: string;
+  caption?: string;
+  labels?: [string, string];
+}
+
+const {
+  before,
+  after,
+  ratio = '3/2',
+  caption,
+  labels = ['Было', 'Стало'],
+} = Astro.props;
+const uid = `ba-${before.name}`.replace(/[^a-z0-9-]/gi, '');
+---
+
+<figure class="ba" data-before-after style={`--ratio:${ratio}`}>
+  <div class="ba__stage">
+    <div class="ba__layer ba__layer--after">
+      <Photo name={after.name} alt={after.alt} brief={after.brief} ratio={ratio} rounded={false} />
+      <span class="ba__tag ba__tag--after">{labels[1]}</span>
+    </div>
+    <div class="ba__layer ba__layer--before">
+      <Photo name={before.name} alt={before.alt} brief={before.brief} ratio={ratio} rounded={false} />
+      <span class="ba__tag ba__tag--before">{labels[0]}</span>
+    </div>
+    <div class="ba__handle" aria-hidden="true">
+      <span class="ba__grip">
+        <svg viewBox="0 0 20 14"><path d="M7 2 3 7l4 5M13 2l4 5-4 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+    </div>
+  </div>
+
+  <label class="visually-hidden" for={uid}>Сравнение «до» и «после»</label>
+  <input
+    id={uid}
+    class="ba__range"
+    type="range"
+    min="0"
+    max="100"
+    value="50"
+    step="1"
+    aria-label="Передвиньте, чтобы сравнить до и после"
+  />
+
+  {caption && <figcaption class="ba__caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .ba {
+    --split: 50%;
+    display: grid;
+    gap: var(--sp-3);
+    margin: 0;
+  }
+
+  .ba__stage {
+    position: relative;
+    aspect-ratio: var(--ratio);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--paper-sunken);
+    touch-action: pan-y;
+    cursor: ew-resize;
+  }
+
+  .ba__layer { position: absolute; inset: 0; }
+  .ba__layer :global(.photo) { height: 100%; border-radius: 0; }
+
+  /* The "before" layer is clipped to the split position. */
+  .ba__layer--before { clip-path: inset(0 calc(100% - var(--split)) 0 0); }
+
+  .ba__tag {
+    position: absolute;
+    bottom: 0.7rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: var(--r-pill);
+    background: rgb(23 22 25 / 0.72);
+    color: #fff;
+    font-size: var(--step--2);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    backdrop-filter: blur(4px);
+  }
+  .ba__tag--before { left: 0.7rem; }
+  .ba__tag--after { right: 0.7rem; }
+
+  .ba__handle {
+    position: absolute;
+    inset-block: 0;
+    left: var(--split);
+    width: 2px;
+    background: var(--paper);
+    transform: translateX(-1px);
+    pointer-events: none;
+  }
+
+  .ba__grip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--ink);
+    box-shadow: var(--shadow-2);
+  }
+  .ba__grip svg { width: 1.1rem; }
+
+  /* The range is the accessible control; visually it sits under the stage. */
+  .ba__range {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  :global(html.js) .ba__range {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  /* Keyboard users get it back the moment it is focused. */
+  :global(html.js) .ba__range:focus-visible {
+    position: static;
+    width: 100%;
+    height: auto;
+    clip-path: none;
+  }
+
+  /* No JS: show both images in full, side by side, and keep the slider. */
+  :global(html:not(.js)) .ba__layer--before { clip-path: inset(0 50% 0 0); }
+
+  .ba__caption {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+</style>

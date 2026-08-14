@@ -1,0 +1,166 @@
+---
+import { site } from '~/data/site';
+
+/**
+ * The fastest possible path from "I have a problem" to "they've seen it".
+ * Picking a file here opens the request flow already at step 2 with the
+ * photos attached — no page change, nothing re-picked.
+ */
+interface Props {
+  title?: string;
+  text?: string;
+  tone?: 'sunken' | 'paper';
+}
+const {
+  title = 'Есть задача? Покажите её.',
+  text = 'Не знаете название детали или механизма? Это нормально — просто сфотографируйте.',
+  tone = 'sunken',
+} = Astro.props;
+const { maxFiles, accept } = site.upload;
+---
+
+<section class:list={['pi', tone === 'sunken' && 'section--sunken']}>
+  <div class="container pi__inner">
+    <div class="pi__copy">
+      <h2 class="pi__title">{title}</h2>
+      <p class="pi__text">{text}</p>
+      <ul class="pi__list">
+        <li>фотография мебели или поломки</li>
+        <li>место, куда нужна мебель</li>
+        <li>деталь, которую надо заменить</li>
+        <li>пример из интернета, который нравится</li>
+      </ul>
+    </div>
+
+    <div class="pi__drop" data-quick-drop>
+      <input
+        type="file"
+        id="quick-intake"
+        accept={accept}
+        multiple
+        class="pi__file"
+        data-quick-intake
+      />
+      <label for="quick-intake" class="pi__face">
+        <svg viewBox="0 0 40 40" aria-hidden="true" class="pi__icon">
+          <path d="M5 12h6l2.6-4h12.8L29 12h6v20H5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          <circle cx="20" cy="21.5" r="6.2" fill="none" stroke="currentColor" stroke-width="2" />
+        </svg>
+        <span class="pi__face-title">Добавить фото</span>
+        <span class="pi__face-note">
+          Перетащите сюда или выберите на телефоне. До {maxFiles} файлов.
+        </span>
+      </label>
+      <p class="pi__alt">
+        Не получается сфотографировать?
+        <button type="button" class="link" data-open-task data-cta="intake_text" data-preset="unknown">
+          Опишите словами
+        </button>
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pi { padding-block: var(--section-y-sm); }
+
+  .pi__inner {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: center;
+  }
+
+  .pi__title {
+    font-size: var(--step-4);
+    max-width: 16ch;
+  }
+
+  .pi__text {
+    margin-block-start: var(--sp-3);
+    color: var(--ink-2);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    max-width: 40ch;
+  }
+
+  .pi__list {
+    display: grid;
+    gap: 0.3rem;
+    margin-block-start: var(--sp-4);
+    padding-inline-start: 1.1em;
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .pi__list li::marker { color: var(--accent); }
+
+  .pi__drop { position: relative; }
+
+  .pi__file {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 1;
+  }
+  /* The escape-hatch link must stay clickable above the file overlay. */
+  .pi__alt { position: relative; z-index: 2; }
+
+  .pi__face {
+    display: grid;
+    justify-items: center;
+    gap: 0.45rem;
+    padding: var(--sp-8) var(--sp-5);
+    text-align: center;
+    background: var(--paper-raised);
+    border: 2px dashed var(--line-strong);
+    border-radius: var(--r-xl);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-2) var(--ease),
+      background-color var(--dur-2) var(--ease),
+      transform var(--dur-2) var(--ease);
+  }
+  .pi__drop:hover .pi__face,
+  .pi__drop[data-dragover] .pi__face {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    transform: translateY(-2px);
+  }
+  .pi__file:focus-visible + .pi__face {
+    outline: 2.5px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  .pi__icon { width: 2.6rem; color: var(--accent); }
+
+  .pi__face-title {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+  }
+
+  .pi__face-note {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    max-width: 26ch;
+    line-height: 1.45;
+  }
+
+  .pi__alt {
+    margin-block-start: var(--sp-4);
+    text-align: center;
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .pi__alt .link { font-size: inherit; font-family: inherit; }
+
+  @media (min-width: 58rem) {
+    .pi__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--sp-8);
+    }
+  }
+</style>

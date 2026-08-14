@@ -1,0 +1,451 @@
+---
+import Logo from './Logo.astro';
+import { catalogue, primary, problems } from '~/data/nav';
+import { primaryContact } from '~/data/site';
+
+const path = Astro.url.pathname;
+const isActive = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+---
+
+<header class="hdr" data-header>
+  <div class="hdr__bar">
+    <div class="container hdr__inner">
+      <Logo href={path === '/' ? null : '/'} />
+
+      <nav class="hdr__nav" aria-label="Основная навигация">
+        <ul class="hdr__list">
+          <li class="hdr__has-menu">
+            <button
+              type="button"
+              class="hdr__link hdr__disclosure"
+              aria-expanded="false"
+              aria-controls="menu-uslugi"
+              data-disclosure
+            >
+              Услуги
+              <svg viewBox="0 0 12 8" aria-hidden="true" class="hdr__chev"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+
+            <div class="megamenu" id="menu-uslugi" hidden data-menu>
+              <div class="container megamenu__inner">
+                {
+                  catalogue.map((group) => (
+                    <div class="megamenu__col">
+                      <a class="megamenu__head" href={group.href}>{group.label}</a>
+                      <ul class="megamenu__items">
+                        {group.items.map((i) => (
+                          <li>
+                            <a href={i.href}>
+                              <span class="megamenu__label">{i.label}</span>
+                              {i.note && <span class="megamenu__note">{i.note}</span>}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                }
+                <div class="megamenu__col megamenu__col--aside">
+                  <p class="megamenu__aside-title">Не знаете, к чему это относится?</p>
+                  <p class="megamenu__aside-text">
+                    Не нужно выбирать раздел. Сфотографируйте — разберёмся вместе.
+                  </p>
+                  <button class="btn btn--accent" type="button" data-open-task data-cta="header_menu">
+                    Показать задачу
+                  </button>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          {
+            primary
+              .filter((i) => i.href !== '/uslugi/')
+              .map((i) => (
+                <li>
+                  <a class="hdr__link" href={i.href} aria-current={isActive(i.href) ? 'page' : undefined}>
+                    {i.label}
+                  </a>
+                </li>
+              ))
+          }
+        </ul>
+      </nav>
+
+      <div class="hdr__actions">
+        {
+          primaryContact && (
+            <a
+              class="hdr__phone"
+              href={`tel:${primaryContact.tel}`}
+              data-track="phone_click"
+              data-track-where="header"
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 2.8h3l1.4 3.5-1.9 1.4a10.5 10.5 0 0 0 4.3 4.3l1.4-1.9 3.5 1.4v3a1.6 1.6 0 0 1-1.8 1.6C8.3 15.4 4.6 11.7 3 5.1A1.6 1.6 0 0 1 4.5 2.8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+              <span class="hdr__phone-num">{primaryContact.phone}</span>
+            </a>
+          )
+        }
+
+        <button class="btn hdr__cta" type="button" data-open-task data-cta="header">
+          Показать задачу
+        </button>
+
+        <button
+          class="hdr__burger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+          data-burger
+        >
+          <span class="visually-hidden">Меню</span>
+          <span class="hdr__burger-box" aria-hidden="true"><i></i><i></i></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile panel. Full list, no nesting to tap through. -->
+  <div class="mnav" id="mobile-nav" hidden data-mobile-nav>
+    <div class="mnav__scroll">
+      <div class="container mnav__inner">
+        <p class="mnav__title">Что случилось?</p>
+        <ul class="mnav__problems">
+          {
+            problems.map((p) => (
+              <li>
+                <a href={p.href}>
+                  <span class="mnav__p-label">{p.label}</span>
+                  {p.note && <span class="mnav__p-note">{p.note}</span>}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+
+        {
+          catalogue.map((group) => (
+            <section class="mnav__group">
+              <a class="mnav__head" href={group.href}>{group.label}</a>
+              <ul class="mnav__items">
+                {group.items.map((i) => (
+                  <li><a href={i.href}>{i.label}</a></li>
+                ))}
+              </ul>
+            </section>
+          ))
+        }
+
+        <section class="mnav__group">
+          <ul class="mnav__items">
+            {primary.filter((i) => i.href !== '/uslugi/').map((i) => (
+              <li><a href={i.href}>{i.label}</a></li>
+            ))}
+          </ul>
+        </section>
+
+        {
+          primaryContact && (
+            <a class="mnav__phone" href={`tel:${primaryContact.tel}`} data-track="phone_click" data-track-where="mobile_menu">
+              {primaryContact.phone}
+              <span>{primaryContact.role}</span>
+            </a>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .hdr__bar {
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(12px) saturate(1.4);
+    border-block-end: 1px solid transparent;
+    transition: border-color var(--dur-2) var(--ease), background-color var(--dur-2) var(--ease);
+  }
+
+  /* Hairline appears only once the page has moved. */
+  :global([data-header].is-stuck) .hdr__bar {
+    border-block-end-color: var(--line);
+  }
+
+  .hdr__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    min-height: var(--header-h);
+  }
+
+  .hdr__nav {
+    display: none;
+    margin-inline-start: auto;
+  }
+
+  .hdr__list {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hdr__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: var(--r-md);
+    font-size: var(--step--1);
+    font-weight: 550;
+    color: var(--ink-2);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--dur-1) var(--ease), background-color var(--dur-1) var(--ease);
+  }
+  .hdr__link:hover { color: var(--ink); background: var(--paper-sunken); }
+  .hdr__link[aria-current='page'] { color: var(--ink); }
+
+  .hdr__chev {
+    width: 0.62rem;
+    transition: transform var(--dur-2) var(--ease);
+  }
+  .hdr__disclosure[aria-expanded='true'] .hdr__chev { transform: rotate(180deg); }
+
+  .hdr__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-inline-start: auto;
+  }
+  .hdr__nav + .hdr__actions { margin-inline-start: var(--sp-4); }
+
+  .hdr__phone {
+    display: none;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .hdr__phone svg { width: 1.05rem; flex: none; }
+  .hdr__phone:hover { color: var(--accent-ink); }
+
+  .hdr__cta {
+    display: none;
+    min-height: 2.7rem;
+    padding: 0.5rem 1.15rem;
+    font-size: var(--step--1);
+    white-space: nowrap;
+  }
+
+  .hdr__burger {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-inline-end: -0.5rem;
+    border-radius: var(--r-md);
+    color: var(--ink);
+  }
+  .hdr__burger-box {
+    display: grid;
+    gap: 5px;
+    width: 1.25rem;
+  }
+  .hdr__burger-box i {
+    display: block;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: transform var(--dur-2) var(--ease), opacity var(--dur-1) var(--ease);
+  }
+  .hdr__burger[aria-expanded='true'] i:first-child { transform: translateY(3.5px) rotate(45deg); }
+  .hdr__burger[aria-expanded='true'] i:last-child { transform: translateY(-3.5px) rotate(-45deg); }
+
+  /* ---- Mega menu ---- */
+  .megamenu {
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    background: var(--paper-raised);
+    border-block: 1px solid var(--line);
+    box-shadow: var(--shadow-3);
+  }
+  .megamenu[hidden] { display: none; }
+
+  .megamenu__inner {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 0.9fr);
+    gap: var(--sp-6);
+    padding-block: var(--sp-6);
+  }
+
+  .megamenu__head {
+    display: block;
+    margin-block-end: var(--sp-3);
+    padding-block-end: var(--sp-2);
+    border-block-end: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: var(--step--1);
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .megamenu__head:hover { color: var(--accent-ink); }
+
+  .megamenu__items {
+    display: grid;
+    gap: 0.1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .megamenu__items a {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.45rem 0.6rem;
+    margin-inline: -0.6rem;
+    border-radius: var(--r-md);
+    text-decoration: none;
+    transition: background-color var(--dur-1) var(--ease);
+  }
+  .megamenu__items a:hover { background: var(--paper-sunken); }
+  .megamenu__label { font-size: var(--step--1); font-weight: 550; color: var(--ink); }
+  .megamenu__note { font-size: var(--step--2); color: var(--ink-3); }
+
+  .megamenu__col--aside {
+    padding: var(--sp-5);
+    background: var(--paper-sunken);
+    border-radius: var(--r-lg);
+    align-self: start;
+  }
+  .megamenu__aside-title {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    font-weight: 650;
+    margin-block-end: 0.4rem;
+  }
+  .megamenu__aside-text {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    margin-block-end: var(--sp-4);
+  }
+
+  /* ---- Mobile nav ---- */
+  .mnav {
+    position: fixed;
+    inset: var(--header-h) 0 0;
+    z-index: 45;
+    background: var(--paper);
+    animation: mnav-in var(--dur-2) var(--ease);
+  }
+  .mnav[hidden] { display: none; }
+
+  @keyframes mnav-in {
+    from { opacity: 0; transform: translateY(-6px); }
+  }
+
+  .mnav__scroll {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: var(--sp-5) var(--sp-9);
+  }
+
+  .mnav__title {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+    margin-block-end: var(--sp-4);
+  }
+
+  .mnav__problems {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0 0 var(--sp-6);
+    padding: 0;
+  }
+  .mnav__problems a {
+    display: grid;
+    gap: 0.15rem;
+    height: 100%;
+    padding: 0.8rem 0.85rem;
+    background: var(--paper-sunken);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    text-decoration: none;
+  }
+  .mnav__p-label { font-weight: 600; font-size: var(--step--1); }
+  .mnav__p-note { font-size: var(--step--2); color: var(--ink-3); line-height: 1.35; }
+
+  .mnav__group { margin-block-end: var(--sp-5); }
+  .mnav__head {
+    display: block;
+    padding-block-end: var(--sp-2);
+    margin-block-end: var(--sp-2);
+    border-block-end: 1px solid var(--line);
+    font-family: var(--font-display);
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+  .mnav__items { list-style: none; margin: 0; padding: 0; }
+  .mnav__items a {
+    display: block;
+    padding: 0.6rem 0;
+    font-size: var(--step-0);
+    font-weight: 550;
+    text-decoration: none;
+    border-block-end: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
+  }
+
+  .mnav__phone {
+    display: grid;
+    gap: 0.1rem;
+    margin-block-start: var(--sp-5);
+    padding: var(--sp-4);
+    background: var(--paper-sunken);
+    border-radius: var(--r-lg);
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 650;
+    text-decoration: none;
+  }
+  .mnav__phone span {
+    font-family: var(--font-body);
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--ink-3);
+  }
+
+  @media (min-width: 60rem) {
+    .hdr__nav { display: block; }
+    .hdr__phone { display: inline-flex; }
+    .hdr__cta { display: inline-flex; }
+    .hdr__burger { display: none; }
+    .mnav { display: none !important; }
+  }
+
+  @media (max-width: 59.99rem) {
+    .megamenu { display: none !important; }
+  }
+</style>

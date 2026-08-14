@@ -1,0 +1,119 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import { isPublic } from '~/lib/facts';
+
+const articles = (await getCollection('journal'))
+  .filter((a) => isPublic(a.data.status) && !a.data.noindex)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const TOPICS = [
+  { key: 'remont', label: 'Ремонт' },
+  { key: 'furnitura', label: 'Фурнитура' },
+  { key: 'zamer', label: 'Замеры' },
+  { key: 'vybor', label: 'Что выбрать' },
+  { key: 'process', label: 'Как это работает' },
+] as const;
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Журнал', href: '/journal/' },
+];
+---
+
+<Base
+  title="Журнал"
+  description="Короткие разборы частых мебельных вопросов: почему провисает дверца, как определить петлю по фото, что дешевле — починить или заказать новое."
+  canonical="/journal/"
+  breadcrumb={trail}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="container jr__head">
+    <h1>Журнал</h1>
+    <p class="lede">
+      Ответы на вопросы, которые обычно гуглят перед тем, как кому-то
+      написать. Без рекламы и без «наши специалисты».
+    </p>
+  </header>
+
+  {
+    TOPICS.map((t) => {
+      const items = articles.filter((a) => a.data.topic === t.key);
+      if (!items.length) return null;
+      return (
+        <section class="container jr__group">
+          <h2 class="jr__group-title">{t.label}</h2>
+          <ul class="jr__list">
+            {items.map((a) => (
+              <li>
+                <a href={`/journal/${a.id}/`}>
+                  <span class="jr__q">{a.data.title}</span>
+                  <span class="jr__a">{a.data.answer}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      );
+    })
+  }
+
+  <ShowTask
+    tone="ink"
+    title="Остались сомнения?"
+    text="Разбираться самостоятельно необязательно. Пришлите фотографию — скажем, что видим."
+  />
+</Base>
+
+<style>
+  .jr__head {
+    padding-block: var(--sp-6) var(--sp-7);
+    max-width: 42rem;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .jr__head h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+
+  .jr__group { margin-block-end: var(--sp-7); }
+
+  .jr__group-title {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-block-end: var(--sp-3);
+    border-block-end: 1px solid var(--line);
+  }
+
+  .jr__list { list-style: none; margin: 0; padding: 0; }
+
+  .jr__list a {
+    display: grid;
+    gap: 0.25rem;
+    padding-block: var(--sp-4);
+    border-block-end: 1px solid var(--line);
+    text-decoration: none;
+    transition: padding-inline-start var(--dur-2) var(--ease);
+  }
+  .jr__list a:hover { padding-inline-start: 0.6rem; }
+
+  .jr__q {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.25;
+  }
+  .jr__list a:hover .jr__q { color: var(--accent-ink); }
+
+  .jr__a {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    line-height: 1.5;
+    max-width: 62ch;
+  }
+</style>

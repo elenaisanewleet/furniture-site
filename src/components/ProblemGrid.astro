@@ -1,0 +1,134 @@
+---
+import { problems } from '~/data/nav';
+
+/**
+ * MODEL B navigation: entry by symptom rather than by object.
+ * Every tile is a real link (crawlable, works without JS) and also carries
+ * the preset that pre-fills step 1 of the request flow.
+ */
+interface Props {
+  title?: string;
+  lede?: string;
+  compact?: boolean;
+}
+const {
+  title = 'С чем к нам приходят',
+  lede = 'Необязательно знать, как называется услуга. Выберите то, что похоже на вашу ситуацию.',
+  compact = false,
+} = Astro.props;
+
+const ICONS: Record<string, string> = {
+  break: 'M4 15l6-9 3 5 2-3 5 7z',
+  part: 'M7 5h10v5a5 5 0 0 1-10 0z',
+  swap: 'M5 8h11l-3-3M19 14H8l3 3',
+  fit: 'M4 5v14M20 5v14M8 9h8v6H8z',
+  remake: 'M6 6h12v5H6zM6 14h7v5H6z',
+  copy: 'M8 4h11v11M5 8h11v11H5z',
+};
+---
+
+<section class:list={['pg', compact && 'pg--compact']}>
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">Начните отсюда</p>
+      <h2>{title}</h2>
+      <p class="lede">{lede}</p>
+    </div>
+
+    <ul class="pg__grid">
+      {
+        problems.map((p) => (
+          <li class="pg__item reveal">
+            <a href={p.href} data-track="service_opened" data-track-where="problem_grid">
+              <svg class="pg__icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d={ICONS[p.icon]} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+              </svg>
+              <span class="pg__label">{p.label}</span>
+              {p.note && <span class="pg__note">{p.note}</span>}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="pg__escape">
+      Ничего не подходит?
+      <button type="button" class="link" data-open-task data-cta="problem_grid" data-preset="unknown">
+        Просто покажите, что у вас происходит
+      </button>
+    </p>
+  </div>
+</section>
+
+<style>
+  .pg { padding-block: var(--section-y); }
+  .pg--compact { padding-block: var(--section-y-sm); }
+
+  .pg__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pg__item a {
+    display: grid;
+    gap: 0.2rem;
+    height: 100%;
+    padding: var(--sp-4);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    text-decoration: none;
+    transition:
+      border-color var(--dur-2) var(--ease),
+      transform var(--dur-2) var(--ease),
+      box-shadow var(--dur-2) var(--ease);
+  }
+  .pg__item a:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+  }
+
+  .pg__icon {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-block-end: var(--sp-3);
+    color: var(--accent);
+  }
+
+  .pg__label {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 650;
+    letter-spacing: var(--tracking-heading);
+    line-height: 1.2;
+  }
+
+  .pg__note {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    line-height: 1.4;
+  }
+
+  .pg__escape {
+    margin-block-start: var(--sp-5);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .pg__escape .link {
+    font-size: inherit;
+    font-family: inherit;
+  }
+
+  @media (min-width: 40rem) {
+    .pg__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+  }
+  @media (min-width: 68rem) {
+    .pg__grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .pg__item a { padding: var(--sp-5) var(--sp-4); }
+  }
+</style>

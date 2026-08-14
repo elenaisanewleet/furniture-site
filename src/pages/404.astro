@@ -1,0 +1,76 @@
+---
+import Base from '~/layouts/Base.astro';
+import { catalogue } from '~/data/nav';
+---
+
+<Base
+  title="Страница не найдена"
+  description="Такой страницы нет. Но задачу всё равно можно показать."
+  canonical="/404/"
+  noindex
+>
+  <div class="container nf">
+    <p class="eyebrow">Ошибка 404</p>
+    <h1>Такой страницы нет</h1>
+    <p class="lede">
+      Возможно, ссылка устарела или в адресе опечатка. Задачу это не отменяет —
+      её всё ещё можно показать.
+    </p>
+
+    <div class="nf__actions">
+      <button class="btn btn--accent btn--lg" type="button" data-open-task data-cta="404">
+        Показать задачу
+      </button>
+      <a class="btn btn--ghost btn--lg" href="/">На главную</a>
+    </div>
+
+    <nav class="nf__nav" aria-label="Разделы сайта">
+      {
+        catalogue.map((g) => (
+          <div>
+            <h2>{g.label}</h2>
+            <ul>
+              {g.items.map((i) => <li><a href={i.href}>{i.label}</a></li>)}
+            </ul>
+          </div>
+        ))
+      }
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    justify-items: start;
+    gap: var(--sp-4);
+    padding-block: var(--sp-8) var(--sp-9);
+    max-width: 52rem;
+  }
+  .nf h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+  .nf__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-block-start: var(--sp-3); }
+
+  .nf__nav {
+    display: grid;
+    gap: var(--sp-5);
+    width: 100%;
+    margin-block-start: var(--sp-7);
+    padding-block-start: var(--sp-6);
+    border-block-start: 1px solid var(--line);
+  }
+  .nf__nav h2 {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-2);
+  }
+  .nf__nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+  .nf__nav a { font-size: var(--step--1); color: var(--ink-2); text-decoration: none; }
+  .nf__nav a:hover { color: var(--ink); text-decoration: underline; }
+
+  @media (min-width: 46rem) {
+    .nf__nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+</style>

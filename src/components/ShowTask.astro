@@ -1,0 +1,170 @@
+---
+/**
+ * The recurring "show your task" block.
+ *
+ * This is the single interaction paradigm of the whole site (brief §25):
+ * after an article, on a repair page, on a hardware page, at the end of a
+ * project — the same block, re-worded for its context. One pattern instead
+ * of a dozen different CTAs.
+ */
+interface Props {
+  title?: string;
+  text?: string;
+  button?: string;
+  preset?: string;
+  /** `inline` sits inside prose; `band` is a full-width section. */
+  variant?: 'band' | 'inline';
+  tone?: 'paper' | 'ink' | 'sunken';
+  /** Short bullet list of what exactly to photograph here. */
+  shots?: string[];
+}
+
+import { primaryContact } from '~/data/site';
+
+const {
+  title = 'Покажите, что нужно сделать',
+  text = 'Сфотографируйте мебель, поломку или место установки. Разбираться в названиях не обязательно.',
+  button = 'Показать задачу',
+  preset,
+  variant = 'band',
+  tone = 'sunken',
+  shots = [],
+} = Astro.props;
+
+const Wrapper = variant === 'band' ? 'section' : 'aside';
+---
+
+<Wrapper class:list={['st', `st--${variant}`, `st--${tone}`]}>
+  <div class:list={[variant === 'band' && 'container', 'st__inner']}>
+    <div class="st__body">
+      <p class="st__eyebrow">Следующий шаг</p>
+      <h2 class="st__title">{title}</h2>
+      <p class="st__text">{text}</p>
+
+      {
+        shots.length > 0 && (
+          <ul class="st__shots">
+            {shots.map((s) => <li>{s}</li>)}
+          </ul>
+        )
+      }
+
+      <div class="st__actions">
+        <button
+          class="btn btn--accent btn--lg"
+          type="button"
+          data-open-task
+          data-cta={`showtask_${variant}`}
+          data-preset={preset}
+        >
+          {button}
+        </button>
+        {
+          primaryContact && (
+            <a
+              class="st__call"
+              href={`tel:${primaryContact.tel}`}
+              data-track="phone_click"
+              data-track-where="showtask"
+            >
+              или позвоните — {primaryContact.phone}
+            </a>
+          )
+        }
+      </div>
+    </div>
+
+    <p class="st__note">
+      Заявку смотрит человек. Если по фотографии будет непонятно — просто
+      спросим, а не станем гадать.
+    </p>
+  </div>
+</Wrapper>
+
+<style>
+  .st--band { padding-block: var(--section-y-sm); }
+  .st--sunken { background: var(--paper-sunken); }
+  .st--ink { background: var(--paper-invert); color: var(--ink-invert); }
+  .st--ink .st__title { color: var(--ink-invert); }
+  .st--ink .st__text,
+  .st--ink .st__note,
+  .st--ink .st__shots { color: color-mix(in srgb, var(--ink-invert) 72%, transparent); }
+  .st--ink .st__call { color: var(--ink-invert); }
+
+  .st--inline {
+    display: block;
+    margin-block: var(--sp-7);
+    padding: var(--sp-6);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--line);
+  }
+  .st--inline.st--sunken { background: var(--paper-sunken); }
+
+  .st__inner {
+    display: grid;
+    gap: var(--sp-5);
+  }
+
+  .st__eyebrow {
+    font-size: var(--step--2);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  .st--ink .st__eyebrow { color: var(--accent-on-ink); }
+
+  .st__title {
+    font-size: var(--step-4);
+    margin-block-start: 0.35rem;
+    max-width: 20ch;
+  }
+  .st--inline .st__title { font-size: var(--step-2); }
+
+  .st__text {
+    margin-block-start: var(--sp-3);
+    color: var(--ink-2);
+    max-width: 48ch;
+    line-height: 1.55;
+  }
+
+  .st__shots {
+    display: grid;
+    gap: 0.3rem;
+    margin-block-start: var(--sp-4);
+    padding-inline-start: 1.1em;
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    max-width: 46ch;
+  }
+  .st__shots li::marker { color: var(--accent); }
+
+  .st__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-4);
+    margin-block-start: var(--sp-5);
+  }
+
+  .st__call {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+  .st__call:hover { text-decoration: underline; }
+
+  .st__note {
+    font-size: var(--step--2);
+    color: var(--ink-3);
+    max-width: 42ch;
+  }
+
+  @media (min-width: 58rem) {
+    .st--band .st__inner {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--sp-7);
+    }
+  }
+</style>

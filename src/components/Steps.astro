@@ -1,0 +1,99 @@
+---
+interface Props {
+  title?: string;
+  lede?: string;
+  items?: { title: string; text: string }[];
+  tone?: 'paper' | 'sunken';
+  eyebrow?: string;
+}
+
+const DEFAULT_STEPS = [
+  { title: 'Вы показываете задачу', text: 'Фотография, пара слов или голосовое. Точные размеры и названия не нужны.' },
+  { title: 'Мы уточняем детали', text: 'Если по фото что-то непонятно, зададим один-два вопроса. Без анкет и опросов.' },
+  { title: 'Мастер смотрит, что можно сделать', text: 'Иногда решение оказывается проще и дешевле, чем вы думали. Иногда — честно скажем, что браться не стоит.' },
+  { title: 'Согласовываем работу', text: 'Что делаем, из чего и сколько это стоит — до начала работы, а не после.' },
+  { title: 'Изготовление, ремонт или установка', text: 'Дальше — по задаче.' },
+];
+
+const {
+  title = 'Как это происходит',
+  lede,
+  items = DEFAULT_STEPS,
+  tone = 'paper',
+  eyebrow = 'Процесс',
+} = Astro.props;
+---
+
+<section class:list={['steps', tone === 'sunken' && 'section--sunken']}>
+  <div class="container">
+    <div class="section-head">
+      <p class="eyebrow">{eyebrow}</p>
+      <h2>{title}</h2>
+      {lede && <p class="lede">{lede}</p>}
+    </div>
+
+    <ol class="steps__list">
+      {
+        items.map((s, i) => (
+          <li class="steps__item reveal">
+            <span class="steps__no">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="steps__title">{s.title}</h3>
+            <p class="steps__text">{s.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .steps { padding-block: var(--section-y); }
+
+  .steps__list {
+    display: grid;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+  }
+
+  .steps__item {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 0.35rem var(--sp-4);
+    padding-block: var(--sp-5);
+    border-block-start: 1px solid var(--line);
+  }
+  .steps__item:last-child { border-block-end: 1px solid var(--line); }
+
+  .steps__no {
+    grid-row: span 2;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--accent);
+    padding-block-start: 0.25rem;
+  }
+
+  .steps__title {
+    font-size: var(--step-1);
+    font-weight: 650;
+  }
+
+  .steps__text {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.55;
+    max-width: 56ch;
+  }
+
+  @media (min-width: 58rem) {
+    .steps__item {
+      grid-template-columns: 4rem minmax(0, 20rem) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--sp-5);
+    }
+    .steps__no { grid-row: auto; }
+    .steps__title { padding-block-start: 0.1rem; }
+  }
+</style>

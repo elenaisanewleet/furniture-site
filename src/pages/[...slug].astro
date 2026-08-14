@@ -1,0 +1,352 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import Photo from '~/components/Photo.astro';
+import Steps from '~/components/Steps.astro';
+import FaqList from '~/components/FaqList.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import RelatedLinks from '~/components/RelatedLinks.astro';
+import UnconfirmedNote from '~/components/UnconfirmedNote.astro';
+import { isPublic } from '~/lib/facts';
+import { service as serviceSchema, faqPage } from '~/lib/schema';
+
+export async function getStaticPaths() {
+  const all = await getCollection('services');
+  return all
+    .filter((s) => isPublic(s.data.status))
+    .map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'services'>;
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+const { Content } = await render(entry);
+
+const all = await getCollection('services');
+const byId = new Map(all.map((s) => [s.id, s]));
+
+/* --- Breadcrumb trail follows the parent chain, not the URL depth. ------- */
+const trail: { name: string; href: string }[] = [{ name: 'Главная', href: '/' }];
+const chain: CollectionEntry<'services'>[] = [];
+let cursor: CollectionEntry<'services'> | undefined = entry;
+const guard = new Set<string>();
+while (cursor && !guard.has(cursor.id)) {
+  guard.add(cursor.id);
+  chain.unshift(cursor);
+  cursor = cursor.data.parent ? byId.get(cursor.data.parent) : undefined;
+}
+if (chain.length > 1 || !chain[0]?.data.parent) {
+  trail.push({ name: 'Услуги', href: '/uslugi/' });
+}
+chain.forEach((c) => trail.push({ name: c.data.title, href: `/${c.id}/` }));
+
+/* --- Children of this page (hub → spokes) ------------------------------- */
+const children = all
+  .filter((s) => s.data.parent === entry.id && isPublic(s.data.status))
+  .sort((a, b) => a.data.order - b.data.order);
+
+const relatedItems = d.related
+  .map((slug) => byId.get(slug))
+  .filter((s): s is CollectionEntry<'services'> => !!s && isPublic(s.data.status))
+  .map((s) => ({ label: s.data.title, href: `/${s.id}/`, note: s.data.short }));
+
+const journal = await getCollection('journal');
+const readingItems = d.reading
+  .map((slug) => journal.find((j) => j.id === slug))
+  .filter((j) => !!j && isPublic(j.data.status))
+  .map((j) => ({ label: j!.data.title, href: `/journal/${j!.id}/`, note: j!.data.answer }));
+
+const examples = d.examples.filter((e) => isPublic(e.status));
+const faqItems = d.faq.filter((f) => isPublic(f.status));
+
+const origin = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const schema = [
+  serviceSchema(origin, {
+    name: d.title,
+    description: d.seoDescription,
+    url: `/${entry.id}/`,
+  }),
+  faqItems.length ? faqPage(faqItems.map(({ q, a }) => ({ q, a }))) : null,
+].filter(Boolean);
+---
+
+<Base
+  title={d.seoTitle}
+  description={d.seoDescription}
+  canonical={`/${entry.id}/`}
+  noindex={d.noindex}
+  breadcrumb={trail}
+  schema={schema}
+>
+  <Breadcrumbs trail={trail} />
+
+  <article>
+    <!-- ---------------------------------------------------------- hero -->
+    <header class="sv-hero">
+      <div class="container sv-hero__inner">
+        <div class="sv-hero__copy">
+          <h1>{d.h1}</h1>
+          <p class="sv-hero__intent">{d.intent}</p>
+          <UnconfirmedNote status={d.status} />
+
+          <div class="sv-hero__actions">
+            <button
+              class="btn btn--accent btn--lg"
+              type="button"
+              data-open-task
+              data-cta="service_hero"
+              data-preset={d.cta.preset}
+            >
+              {d.cta.button}
+            </button>
+          </div>
+        </div>
+
+        {
+          d.hero && (
+            <div class="sv-hero__media">
+              <Photo
+                name={d.hero.name}
+                alt={d.hero.alt}
+                brief={d.hero.brief}
+                ratio={d.hero.ratio}
+                priority
+                sizes="(min-width: 68rem) 48vw, 100vw"
+              />
+            </div>
+          )
+        }
+      </div>
+    </header>
+
+    <!-- ------------------------------------------------------ problems -->
+    {
+      d.problems.length > 0 && (
+        <section class="section--sm sv-problems">
+          <div class="container">
+            <h2 class="sv-h2">С чем сюда приходят</h2>
+            <p class="sv-note">
+              Формулировки настоящие. Если узнали свою — этого уже достаточно,
+              чтобы написать.
+            </p>
+            <ul class="sv-problems__list">
+              {d.problems.map((p) => (
+                <li>«{p}»</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- ------------------------------------------------------ examples -->
+    {
+      examples.length > 0 && (
+        <section class="section--sm">
+          <div class="container">
+            <h2 class="sv-h2">Что обычно можно сделать</h2>
+            <ul class="sv-examples">
+              {examples.map((e) => (
+                <li class="reveal">
+                  <h3>{e.title}</h3>
+                  <p>{e.text}</p>
+                  <UnconfirmedNote status={e.status} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- ---------------------------------------------------------- body -->
+    <section class="section--sm">
+      <div class="container">
+        <div class="prose sv-prose">
+          <Content />
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------- gallery -->
+    {
+      d.gallery.length > 0 && (
+        <section class="section--sm">
+          <div class="container">
+            <div class="sv-gallery">
+              {d.gallery.map((g) => (
+                <Photo
+                  name={g.name}
+                  alt={g.alt}
+                  brief={g.brief}
+                  ratio={g.ratio}
+                  sizes="(min-width: 62rem) 45vw, 100vw"
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- ------------------------------------------------------- children -->
+    {
+      children.length > 0 && (
+        <section class="section--sm">
+          <div class="container">
+            <h2 class="sv-h2">Разделы</h2>
+            <RelatedLinks
+              title="Внутри этого направления"
+              items={children.map((c) => ({
+                label: c.data.title,
+                href: `/${c.id}/`,
+                note: c.data.short,
+              }))}
+            />
+          </div>
+        </section>
+      )
+    }
+
+    <!-- --------------------------------------------------------- CTA -->
+    <ShowTask
+      title={d.cta.title}
+      text={d.cta.text}
+      button={d.cta.button}
+      preset={d.cta.preset}
+      tone="sunken"
+    />
+
+    <!-- ------------------------------------------------------- process -->
+    {d.process.length > 0 ? <Steps items={d.process} /> : <Steps />}
+
+    <!-- ----------------------------------------------------------- FAQ -->
+    {
+      faqItems.length > 0 && (
+        <FaqList items={faqItems} title="Вопросы по этой задаче" />
+      )
+    }
+
+    <!-- ------------------------------------------------------- related -->
+    {
+      (relatedItems.length > 0 || readingItems.length > 0) && (
+        <section class="section--sm sv-related">
+          <div class="container">
+            <RelatedLinks title="Смотрите также" items={relatedItems} />
+            <RelatedLinks title="Разобраться самому" items={readingItems} columns={2} />
+          </div>
+        </section>
+      )
+    }
+  </article>
+
+  <ShowTask
+    tone="ink"
+    title="Остались сомнения?"
+    text="Не обязательно решать заранее, что именно вам нужно. Покажите задачу — разберёмся вместе."
+    button="Показать задачу"
+    preset={d.cta.preset}
+  />
+</Base>
+
+<style>
+  .sv-hero { padding-block: var(--sp-5) var(--sp-6); }
+
+  .sv-hero__inner {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: center;
+  }
+
+  .sv-hero__copy h1 {
+    font-size: var(--display-sm);
+    line-height: var(--lh-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .sv-hero__intent {
+    margin-block-start: var(--sp-4);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 44ch;
+  }
+
+  .sv-hero__actions { margin-block-start: var(--sp-6); }
+
+  .sv-h2 {
+    font-size: var(--step-3);
+    margin-block-end: var(--sp-2);
+  }
+
+  .sv-note {
+    font-size: var(--step--1);
+    color: var(--ink-3);
+    max-width: 48ch;
+    margin-block-end: var(--sp-5);
+  }
+
+  /* ---- Problems: set in the visitor's own words ---- */
+  .sv-problems__list {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sv-problems__list li {
+    padding: 0.75rem 1rem;
+    background: var(--paper-sunken);
+    border-radius: var(--r-md);
+    font-size: var(--step-0);
+    color: var(--ink-2);
+    line-height: 1.4;
+  }
+
+  /* ---- Examples ---- */
+  .sv-examples {
+    display: grid;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .sv-examples li {
+    padding-block: var(--sp-5);
+    border-block-start: 1px solid var(--line);
+  }
+  .sv-examples li:last-child { border-block-end: 1px solid var(--line); }
+  .sv-examples h3 { font-size: var(--step-1); margin-block-end: 0.35rem; }
+  .sv-examples p { color: var(--ink-2); font-size: var(--step--1); line-height: 1.55; max-width: 56ch; }
+
+  .sv-prose { max-width: 42rem; }
+
+  .sv-gallery {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  .sv-related { padding-block-end: var(--sp-8); }
+
+  @media (min-width: 40rem) {
+    .sv-problems__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sv-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 62rem) {
+    .sv-examples { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--sp-7); }
+    .sv-examples li:nth-child(2) { border-block-start: 1px solid var(--line); }
+  }
+
+  @media (min-width: 68rem) {
+    .sv-hero { padding-block: var(--sp-6) var(--sp-8); }
+    .sv-hero__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--sp-8);
+    }
+  }
+</style>

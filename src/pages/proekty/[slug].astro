@@ -1,0 +1,289 @@
+---
+import { getCollection, type CollectionEntry } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import Photo from '~/components/Photo.astro';
+import BeforeAfter from '~/components/BeforeAfter.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import RelatedLinks from '~/components/RelatedLinks.astro';
+import { isPublic } from '~/lib/facts';
+
+export async function getStaticPaths() {
+  const all = await getCollection('projects');
+  return all.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+interface Props {
+  entry: CollectionEntry<'projects'>;
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+
+const services = await getCollection('services');
+const byId = new Map(services.map((s) => [s.id, s]));
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Работы', href: '/proekty/' },
+  { name: d.title, href: `/proekty/${entry.id}/` },
+];
+
+const relatedItems = d.related
+  .map((slug) => byId.get(slug))
+  .filter((s): s is CollectionEntry<'services'> => !!s && isPublic(s.data.status))
+  .map((s) => ({ label: s.data.title, href: `/${s.id}/`, note: s.data.short }));
+
+const factRows = [
+  ['Тип работы', d.kind],
+  ['Район', d.facts.district],
+  ['Размеры', d.facts.dimensions],
+  ['Материалы', d.facts.materials],
+  ['Фурнитура', d.facts.hardware],
+  ['Срок', d.facts.duration],
+  ['Стоимость', d.facts.price],
+].filter(([, v]) => !!v) as [string, string][];
+---
+
+<Base
+  title={d.seoTitle}
+  description={d.seoDescription}
+  canonical={`/proekty/${entry.id}/`}
+  breadcrumb={trail}
+  noindex={d.placeholder}
+>
+  <Breadcrumbs trail={trail} />
+
+  <article class="pr">
+    {
+      d.placeholder && (
+        <div class="container">
+          <aside class="pr__demo">
+            <strong>Это шаблон страницы работы.</strong>
+            <p>
+              Описанный здесь заказ вымышленный — он показывает, как будет
+              выглядеть настоящая работа: задача клиента, ограничения,
+              решение и результат. Реальные проекты появятся здесь после
+              первых выполненных заказов, с настоящими фотографиями.
+            </p>
+          </aside>
+        </div>
+      )
+    }
+
+    <header class="container pr__head">
+      <p class="eyebrow">{d.kind}</p>
+      <h1>{d.h1}</h1>
+      <p class="pr__summary">{d.summary}</p>
+    </header>
+
+    {
+      d.hero && (
+        <div class="container pr__hero">
+          <Photo
+            name={d.hero.name}
+            alt={d.hero.alt}
+            brief={d.hero.brief}
+            ratio={d.hero.ratio}
+            priority
+            sizes="(min-width: 68rem) 70vw, 100vw"
+          />
+        </div>
+      )
+    }
+
+    <div class="container pr__body">
+      <div class="pr__main">
+        <section class="pr__block">
+          <h2>Задача</h2>
+          <p>{d.task}</p>
+        </section>
+
+        <section class="pr__block">
+          <h2>Как было</h2>
+          <p>{d.situation}</p>
+        </section>
+
+        {
+          d.constraints.length > 0 && (
+            <section class="pr__block">
+              <h2>Что усложняло</h2>
+              <ul class="pr__constraints">
+                {d.constraints.map((c) => <li>{c}</li>)}
+              </ul>
+            </section>
+          )
+        }
+
+        <section class="pr__block">
+          <h2>Что сделали</h2>
+          <p>{d.solution}</p>
+        </section>
+
+        <section class="pr__block">
+          <h2>Результат</h2>
+          <p>{d.result}</p>
+        </section>
+      </div>
+
+      {
+        factRows.length > 0 && (
+          <aside class="pr__facts">
+            <h2>Коротко</h2>
+            <dl>
+              {factRows.map(([k, v]) => (
+                <div>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </aside>
+        )
+      }
+    </div>
+
+    {
+      d.beforeAfter && (
+        <section class="container pr__ba">
+          <h2>До и после</h2>
+          <BeforeAfter
+            before={d.beforeAfter.before}
+            after={d.beforeAfter.after}
+            caption="Потяните за ползунок, чтобы сравнить"
+          />
+        </section>
+      )
+    }
+
+    {
+      d.gallery.length > 0 && (
+        <section class="container pr__gallery">
+          {d.gallery.map((g) => (
+            <Photo
+              name={g.name}
+              alt={g.alt}
+              brief={g.brief}
+              ratio={g.ratio}
+              sizes="(min-width: 62rem) 45vw, 100vw"
+            />
+          ))}
+        </section>
+      )
+    }
+
+    {
+      relatedItems.length > 0 && (
+        <section class="container">
+          <RelatedLinks title="Похожие задачи" items={relatedItems} />
+        </section>
+      )
+    }
+  </article>
+
+  <ShowTask
+    tone="ink"
+    title="Хотите что-то похожее?"
+    text="Покажите свою комнату или свою поломку — посмотрим, как это можно решить у вас."
+    button="Показать задачу"
+  />
+</Base>
+
+<style>
+  .pr { padding-block-start: var(--sp-5); }
+
+  .pr__demo {
+    display: grid;
+    gap: 0.4rem;
+    padding: var(--sp-4) var(--sp-5);
+    margin-block-end: var(--sp-6);
+    background: color-mix(in srgb, #b45309 14%, transparent);
+    border-inline-start: 3px solid #b45309;
+    border-radius: var(--r-md);
+    font-size: var(--step--1);
+  }
+  .pr__demo p { color: var(--ink-2); max-width: 62ch; line-height: 1.55; }
+
+  .pr__head { max-width: 46rem; }
+  .pr__head h1 {
+    margin-block-start: var(--sp-4);
+    font-size: var(--display-sm);
+    line-height: var(--lh-display);
+  }
+  .pr__summary {
+    margin-block-start: var(--sp-4);
+    font-size: var(--step-1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  .pr__hero { margin-block-start: var(--sp-7); }
+
+  .pr__body {
+    display: grid;
+    gap: var(--sp-7);
+    margin-block-start: var(--sp-8);
+  }
+
+  .pr__block + .pr__block { margin-block-start: var(--sp-6); }
+  .pr__block h2 {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-3);
+  }
+  .pr__block p {
+    color: var(--ink-2);
+    line-height: 1.65;
+    max-width: 62ch;
+  }
+
+  .pr__constraints {
+    display: grid;
+    gap: 0.4rem;
+    padding-inline-start: 1.1em;
+    color: var(--ink-2);
+    max-width: 58ch;
+  }
+  .pr__constraints li::marker { color: var(--accent); }
+
+  .pr__facts {
+    align-self: start;
+    padding: var(--sp-5);
+    background: var(--paper-sunken);
+    border-radius: var(--r-lg);
+  }
+  .pr__facts h2 {
+    font-size: var(--step--2);
+    font-weight: 650;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: var(--sp-4);
+  }
+  .pr__facts dl { display: grid; gap: var(--sp-3); margin: 0; }
+  .pr__facts dt { font-size: var(--step--2); color: var(--ink-3); }
+  .pr__facts dd { margin: 0; font-size: var(--step--1); font-weight: 550; }
+
+  .pr__ba,
+  .pr__gallery { margin-block-start: var(--sp-8); }
+  .pr__ba h2 { font-size: var(--step-3); margin-block-end: var(--sp-4); }
+
+  .pr__gallery {
+    display: grid;
+    gap: var(--sp-4);
+  }
+
+  @media (min-width: 46rem) {
+    .pr__gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 62rem) {
+    .pr__body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 17rem);
+      gap: var(--sp-8);
+    }
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+import { SHOW_UNCONFIRMED, STATUS_LABEL, type FactStatus } from '~/lib/facts';
+
+/**
+ * Visible only in a review build. Marks content that has not yet been
+ * confirmed by the master, so the owner can walk the site and answer.
+ * Renders nothing at all in the public build.
+ */
+interface Props {
+  status?: FactStatus;
+  note?: string;
+}
+const { status, note } = Astro.props;
+const show = SHOW_UNCONFIRMED && status && status !== 'fact';
+---
+
+{
+  show && (
+    <p class="unc" data-status={status}>
+      <strong>{STATUS_LABEL[status!]}</strong>
+      {note && <span>{note}</span>}
+    </p>
+  )
+}
+
+<style>
+  .unc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+    margin-block: 0.5rem;
+    padding: 0.4rem 0.7rem;
+    border-inline-start: 3px solid #d97706;
+    background: color-mix(in srgb, #d97706 12%, transparent);
+    border-radius: var(--r-sm);
+    font-size: var(--step--2);
+    color: var(--ink-2);
+  }
+  .unc strong { color: #92400e; text-transform: uppercase; letter-spacing: 0.05em; }
+  :global([data-theme='dark']) .unc strong { color: #fbbf24; }
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .unc strong { color: #fbbf24; }
+  }
+</style>

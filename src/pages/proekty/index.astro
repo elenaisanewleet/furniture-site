@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ProjectCard from '~/components/ProjectCard.astro';
+import ShowTask from '~/components/ShowTask.astro';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => a.data.order - b.data.order
+);
+const allPlaceholder = projects.every((p) => p.data.placeholder);
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Работы', href: '/proekty/' },
+];
+---
+
+<Base
+  title="Работы"
+  description="Как выглядит решённая мебельная задача: что было, что мешало, что сделали. Каждая работа — с фотографиями и описанием."
+  canonical="/proekty/"
+  breadcrumb={trail}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="container pj__head">
+    <h1>Работы</h1>
+    <p class="lede">
+      Каждая работа описана одинаково: с чем пришёл человек, что мешало,
+      что в итоге сделали. Так понятнее, чем просто галерея красивых фасадов.
+    </p>
+  </header>
+
+  {
+    allPlaceholder && (
+      <div class="container">
+        <aside class="pj__notice">
+          <strong>Настоящих работ здесь пока нет.</strong>
+          <p>
+            Ниже — шаблоны страниц: они показывают, как будет выглядеть
+            описание реального заказа. Мы намеренно не выдаём их за
+            выполненные работы. Как только появятся первые заказы с
+            фотографиями, шаблоны заменятся настоящими проектами.
+          </p>
+        </aside>
+      </div>
+    )
+  }
+
+  <section class="container pj__grid-wrap">
+    <div class="grid grid--3">
+      {
+        projects.map((p) => (
+          <ProjectCard
+            href={`/proekty/${p.id}/`}
+            title={p.data.title}
+            summary={p.data.summary}
+            kind={p.data.kind}
+            placeholder={p.data.placeholder}
+            image={p.data.hero}
+            headingLevel={2}
+          />
+        ))
+      }
+    </div>
+  </section>
+
+  <ShowTask
+    tone="ink"
+    title="Хотите что-то похожее?"
+    text="Покажите своё помещение или свою поломку — посмотрим, как это решается у вас."
+  />
+</Base>
+
+<style>
+  .pj__head {
+    padding-block: var(--sp-6) var(--sp-7);
+    max-width: 44rem;
+    display: grid;
+    gap: var(--sp-4);
+  }
+  .pj__head h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+
+  .pj__notice {
+    display: grid;
+    gap: 0.4rem;
+    padding: var(--sp-5);
+    margin-block-end: var(--sp-7);
+    background: var(--paper-sunken);
+    border-inline-start: 3px solid var(--accent);
+    border-radius: var(--r-md);
+  }
+  .pj__notice p { color: var(--ink-2); font-size: var(--step--1); line-height: 1.6; max-width: 62ch; }
+
+  .pj__grid-wrap { padding-block-end: var(--sp-6); }
+</style>

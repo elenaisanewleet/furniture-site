@@ -1,0 +1,88 @@
+---
+import Photo from './Photo.astro';
+
+interface Props {
+  href: string;
+  title: string;
+  summary: string;
+  kind: string;
+  placeholder?: boolean;
+  image?: { name: string; alt: string; brief?: string; ratio?: string };
+  /** Must follow the surrounding outline — h3 under a section h2, else h2. */
+  headingLevel?: 2 | 3;
+}
+const {
+  href, title, summary, kind, placeholder = false, image, headingLevel = 3,
+} = Astro.props;
+const H = `h${headingLevel}` as 'h2' | 'h3';
+---
+
+<article class="card pc">
+  {
+    image && (
+      <div class="pc__media">
+        <Photo
+          name={image.name}
+          alt={image.alt}
+          brief={image.brief}
+          ratio={image.ratio ?? '4/3'}
+          rounded={false}
+          sizes="(min-width: 68rem) 33vw, (min-width: 34rem) 50vw, 100vw"
+        />
+        {placeholder && <span class="pc__flag">Шаблон · не реальная работа</span>}
+      </div>
+    )
+  }
+  <div class="pc__body">
+    <p class="pc__kind">{kind}</p>
+    <H class="pc__title">
+      <a class="card__link" href={href} data-track="project_opened" data-track-where="project_card">
+        {title}
+      </a>
+    </H>
+    <p class="pc__summary">{summary}</p>
+  </div>
+</article>
+
+<style>
+  .pc__media { position: relative; overflow: hidden; }
+  .pc__media :global(.photo) { transition: transform var(--dur-3) var(--ease); }
+  .card:has(a:hover) .pc__media :global(.photo) { transform: scale(1.025); }
+
+  .pc__flag {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: var(--r-pill);
+    background: #7c2d12;
+    color: #fff;
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .pc__body {
+    display: grid;
+    gap: 0.35rem;
+    padding: var(--sp-5);
+  }
+
+  .pc__kind {
+    font-size: var(--step--2);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .pc__title { font-size: var(--step-1); font-weight: 650; }
+  .pc__title a { text-decoration: none; }
+
+  .pc__summary {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+</style>

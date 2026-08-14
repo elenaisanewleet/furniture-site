@@ -1,0 +1,356 @@
+# Decap CMS — редактор контента без разработчика.
+#
+# Что нужно один раз настроить перед использованием:
+#   1. repo — укажите свой репозиторий (owner/name).
+#   2. Подключите GitHub OAuth (или Netlify Identity / git-gateway),
+#      иначе войти в редактор не получится.
+#   3. Локально можно работать без всего этого:
+#         npx decap-server
+#         npm run dev
+#      и открыть /admin/ — сохранение пойдёт прямо в файлы.
+
+backend:
+  name: github
+  repo: elenaisanewleet/furniture-site   # ← проверьте
+  branch: main
+
+local_backend: true
+publish_mode: editorial_workflow
+
+media_folder: public/photo
+public_folder: /photo
+
+locale: ru
+
+collections:
+  # ------------------------------------------------------------------ услуги
+  - name: services
+    label: Услуги
+    label_singular: Услугу
+    folder: src/content/services
+    create: true
+    slug: '{{slug}}'
+    path: '{{slug}}'
+    extension: md
+    summary: '{{title}} — {{status}}'
+    fields:
+      - { name: title, label: Название, widget: string }
+      - { name: h1, label: Заголовок на странице (H1), widget: string }
+      - { name: seoTitle, label: Title для поиска, widget: string, hint: до 60 знаков }
+      - { name: seoDescription, label: Description, widget: text, hint: 120–158 знаков }
+      - name: group
+        label: Направление
+        widget: select
+        options:
+          - { label: Новая мебель, value: mebel }
+          - { label: Ремонт и переделка, value: remont }
+          - { label: Фурнитура, value: furnitura }
+          - { label: Детали, value: detali }
+      - { name: parent, label: Родительская услуга (slug), widget: string, required: false }
+      - { name: order, label: Порядок, widget: number, default: 50, value_type: int }
+      - { name: short, label: Короткое описание, widget: string }
+      - name: intent
+        label: Зачем человек пришёл
+        widget: string
+        hint: Одна фраза от первого лица, как сказал бы клиент
+      - name: problems
+        label: С чем приходят (словами клиента)
+        widget: list
+        field: { name: item, label: Формулировка, widget: string }
+      - name: examples
+        label: Что можно сделать
+        widget: list
+        fields:
+          - { name: title, label: Заголовок, widget: string }
+          - { name: text, label: Текст, widget: text }
+          - name: status
+            label: Статус
+            widget: select
+            default: needs-confirmation
+            options:
+              - { label: подтверждено, value: fact }
+              - { label: гипотеза, value: hypothesis }
+              - { label: нужно уточнить, value: needs-confirmation }
+      - name: hero
+        label: Главная фотография
+        widget: object
+        required: false
+        fields:
+          - { name: name, label: Имя файла без расширения, widget: string }
+          - { name: alt, label: Alt, widget: string }
+          - { name: ratio, label: Пропорции, widget: select, default: '3/2', options: ['16/9','4/3','3/2','1/1','4/5','3/4'] }
+          - { name: brief, label: Бриф на съёмку, widget: text, required: false }
+      - name: gallery
+        label: Галерея
+        widget: list
+        required: false
+        fields:
+          - { name: name, label: Имя файла, widget: string }
+          - { name: alt, label: Alt, widget: string }
+          - { name: ratio, label: Пропорции, widget: select, default: '4/3', options: ['16/9','4/3','3/2','1/1','4/5','3/4'] }
+          - { name: brief, label: Бриф, widget: text, required: false }
+      - name: faq
+        label: Вопросы по этой услуге
+        widget: list
+        required: false
+        fields:
+          - { name: q, label: Вопрос, widget: string }
+          - { name: a, label: Ответ, widget: text }
+          - name: status
+            label: Статус
+            widget: select
+            default: needs-confirmation
+            options:
+              - { label: подтверждено, value: fact }
+              - { label: гипотеза, value: hypothesis }
+              - { label: нужно уточнить, value: needs-confirmation }
+      - name: related
+        label: Связанные услуги (slug)
+        widget: list
+        required: false
+        field: { name: slug, label: slug, widget: string }
+      - name: reading
+        label: Статьи по теме (slug)
+        widget: list
+        required: false
+        field: { name: slug, label: slug, widget: string }
+      - name: cta
+        label: Призыв «показать задачу»
+        widget: object
+        fields:
+          - { name: title, label: Заголовок, widget: string }
+          - { name: text, label: Текст, widget: text }
+          - { name: button, label: Кнопка, widget: string, default: Показать задачу }
+          - name: preset
+            label: Что подставить в форму
+            widget: select
+            required: false
+            options: [new, remake, repair, part, custom-part, unknown]
+      - name: status
+        label: Статус страницы
+        widget: select
+        default: needs-confirmation
+        options:
+          - { label: подтверждено — публикуется, value: fact }
+          - { label: гипотеза — скрыта, value: hypothesis }
+          - { label: нужно уточнить — скрыта, value: needs-confirmation }
+      - { name: noindex, label: Закрыть от индексации, widget: boolean, default: false }
+      - { name: updated, label: Обновлено, widget: datetime, required: false, format: 'YYYY-MM-DD', date_format: 'DD.MM.YYYY', time_format: false }
+      - { name: body, label: Текст страницы, widget: markdown }
+
+  # ----------------------------------------------------------------- проекты
+  - name: projects
+    label: Работы
+    label_singular: Работу
+    folder: src/content/projects
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    summary: '{{title}}{{#if placeholder}} — ШАБЛОН{{/if}}'
+    fields:
+      - { name: title, label: Название, widget: string }
+      - { name: h1, label: Заголовок (H1), widget: string }
+      - { name: seoTitle, label: Title, widget: string }
+      - { name: seoDescription, label: Description, widget: text }
+      - name: placeholder
+        label: Это шаблон, а не настоящая работа
+        widget: boolean
+        default: true
+        hint: Снимите галочку только для реальной выполненной работы с настоящими фото
+      - { name: summary, label: Кратко, widget: text }
+      - { name: kind, label: Тип работы, widget: string }
+      - { name: serviceSlug, label: К какой услуге относится, widget: string, required: false }
+      - { name: order, label: Порядок, widget: number, default: 50, value_type: int }
+      - name: facts
+        label: Коротко о проекте
+        widget: object
+        required: false
+        fields:
+          - { name: district, label: Район, widget: string, required: false }
+          - { name: dimensions, label: Размеры, widget: string, required: false }
+          - { name: materials, label: Материалы, widget: string, required: false }
+          - { name: hardware, label: Фурнитура, widget: string, required: false }
+          - { name: duration, label: Срок, widget: string, required: false }
+          - { name: price, label: Стоимость, widget: string, required: false }
+      - { name: task, label: Задача клиента, widget: text }
+      - { name: situation, label: Как было, widget: text }
+      - name: constraints
+        label: Что усложняло
+        widget: list
+        required: false
+        field: { name: item, label: Ограничение, widget: string }
+      - { name: solution, label: Что сделали, widget: text }
+      - { name: result, label: Результат, widget: text }
+      - name: hero
+        label: Главное фото
+        widget: object
+        required: false
+        fields:
+          - { name: name, label: Имя файла, widget: string }
+          - { name: alt, label: Alt, widget: string }
+          - { name: ratio, label: Пропорции, widget: select, default: '3/2', options: ['16/9','4/3','3/2','1/1','4/5','3/4'] }
+          - { name: brief, label: Бриф, widget: text, required: false }
+      - name: beforeAfter
+        label: До и после
+        widget: object
+        required: false
+        fields:
+          - name: before
+            label: Было
+            widget: object
+            fields:
+              - { name: name, label: Имя файла, widget: string }
+              - { name: alt, label: Alt, widget: string }
+              - { name: ratio, label: Пропорции, widget: string, default: '3/2' }
+              - { name: brief, label: Бриф, widget: text, required: false }
+          - name: after
+            label: Стало
+            widget: object
+            fields:
+              - { name: name, label: Имя файла, widget: string }
+              - { name: alt, label: Alt, widget: string }
+              - { name: ratio, label: Пропорции, widget: string, default: '3/2' }
+              - { name: brief, label: Бриф, widget: text, required: false }
+      - name: gallery
+        label: Галерея
+        widget: list
+        required: false
+        fields:
+          - { name: name, label: Имя файла, widget: string }
+          - { name: alt, label: Alt, widget: string }
+          - { name: ratio, label: Пропорции, widget: string, default: '4/3' }
+          - { name: brief, label: Бриф, widget: text, required: false }
+      - name: related
+        label: Связанные услуги (slug)
+        widget: list
+        required: false
+        field: { name: slug, label: slug, widget: string }
+      - { name: date, label: Дата, widget: datetime, required: false, format: 'YYYY-MM-DD', date_format: 'DD.MM.YYYY', time_format: false }
+
+  # ----------------------------------------------------------------- журнал
+  - name: journal
+    label: Журнал
+    label_singular: Статью
+    folder: src/content/journal
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    fields:
+      - { name: title, label: Название, widget: string }
+      - { name: h1, label: Заголовок (H1), widget: string }
+      - { name: seoTitle, label: Title, widget: string }
+      - { name: seoDescription, label: Description, widget: text }
+      - { name: answer, label: Короткий ответ одной фразой, widget: text }
+      - { name: query, label: Поисковый запрос, widget: string }
+      - name: topic
+        label: Раздел
+        widget: select
+        options:
+          - { label: Ремонт, value: remont }
+          - { label: Фурнитура, value: furnitura }
+          - { label: Замеры, value: zamer }
+          - { label: Что выбрать, value: vybor }
+          - { label: Как это работает, value: process }
+      - name: hero
+        label: Фотография
+        widget: object
+        required: false
+        fields:
+          - { name: name, label: Имя файла, widget: string }
+          - { name: alt, label: Alt, widget: string }
+          - { name: ratio, label: Пропорции, widget: string, default: '3/2' }
+          - { name: brief, label: Бриф, widget: text, required: false }
+      - name: services
+        label: К каким услугам относится (slug)
+        widget: list
+        required: false
+        field: { name: slug, label: slug, widget: string }
+      - name: related
+        label: Похожие статьи (slug)
+        widget: list
+        required: false
+        field: { name: slug, label: slug, widget: string }
+      - name: cta
+        label: Призыв в конце
+        widget: object
+        required: false
+        fields:
+          - { name: title, label: Заголовок, widget: string }
+          - { name: text, label: Текст, widget: text }
+          - { name: preset, label: Пресет формы, widget: select, required: false, options: [new, remake, repair, part, custom-part, unknown] }
+      - { name: date, label: Дата, widget: datetime, format: 'YYYY-MM-DD', date_format: 'DD.MM.YYYY', time_format: false }
+      - { name: updated, label: Обновлено, widget: datetime, required: false, format: 'YYYY-MM-DD', date_format: 'DD.MM.YYYY', time_format: false }
+      - name: status
+        label: Статус
+        widget: select
+        default: fact
+        options:
+          - { label: подтверждено — публикуется, value: fact }
+          - { label: гипотеза — скрыта, value: hypothesis }
+          - { label: нужно уточнить — скрыта, value: needs-confirmation }
+      - { name: noindex, label: Закрыть от индексации, widget: boolean, default: false }
+      - { name: body, label: Текст, widget: markdown }
+
+  # -------------------------------------------------------------------- FAQ
+  - name: faq
+    label: Вопросы и ответы
+    label_singular: Вопрос
+    folder: src/content/faq
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    summary: '{{q}}'
+    fields:
+      - { name: q, label: Вопрос, widget: string }
+      - { name: a, label: Короткий ответ, widget: text }
+      - name: group
+        label: Раздел
+        widget: select
+        options:
+          - { label: Как поставить задачу, value: zayavka }
+          - { label: Ремонт и переделка, value: remont }
+          - { label: Детали и фурнитура, value: furnitura }
+          - { label: Деньги, value: dengi }
+          - { label: Как мы работаем, value: rabota }
+      - { name: order, label: Порядок, widget: number, default: 50, value_type: int }
+      - name: services
+        label: Показывать рядом с услугами (slug)
+        widget: list
+        required: false
+        field: { name: slug, label: slug, widget: string }
+      - name: status
+        label: Статус
+        widget: select
+        default: needs-confirmation
+        options:
+          - { label: подтверждено — публикуется, value: fact }
+          - { label: гипотеза — скрыта, value: hypothesis }
+          - { label: нужно уточнить — скрыта, value: needs-confirmation }
+      - { name: body, label: Развёрнутый ответ, widget: markdown, required: false }
+
+  # ------------------------------------------------------------------ районы
+  - name: areas
+    label: Районы обслуживания
+    label_singular: Район
+    folder: src/content/areas
+    create: true
+    slug: '{{slug}}'
+    extension: md
+    summary: '{{name}}'
+    fields:
+      - { name: name, label: Название, widget: string }
+      - name: kind
+        label: Тип
+        widget: select
+        options:
+          - { label: Город, value: city }
+          - { label: Район города, value: district }
+          - { label: Населённый пункт, value: settlement }
+      - { name: order, label: Порядок, widget: number, default: 50, value_type: int }
+      - name: status
+        label: Статус
+        widget: select
+        default: needs-confirmation
+        options:
+          - { label: подтверждено — публикуется, value: fact }
+          - { label: нужно уточнить — скрыт, value: needs-confirmation }

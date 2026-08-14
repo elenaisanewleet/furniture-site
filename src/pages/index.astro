@@ -1,0 +1,418 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Photo from '~/components/Photo.astro';
+import PhotoIntake from '~/components/PhotoIntake.astro';
+import ProblemGrid from '~/components/ProblemGrid.astro';
+import NameItBlock from '~/components/NameItBlock.astro';
+import ServiceCard from '~/components/ServiceCard.astro';
+import ProjectCard from '~/components/ProjectCard.astro';
+import Steps from '~/components/Steps.astro';
+import FaqList from '~/components/FaqList.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import { primaryContact } from '~/data/site';
+import { isPublic } from '~/lib/facts';
+import { faqPage } from '~/lib/schema';
+
+// Home shows the four hubs, in the order a visitor most likely needs them.
+const GROUP_ORDER = ['mebel', 'remont', 'furnitura', 'detali'];
+const services = (await getCollection('services'))
+  .filter((s) => isPublic(s.data.status) && !s.data.parent)
+  .sort(
+    (a, b) =>
+      GROUP_ORDER.indexOf(a.data.group) - GROUP_ORDER.indexOf(b.data.group) ||
+      a.data.order - b.data.order
+  );
+
+const projects = (await getCollection('projects'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+
+const faqAll = (await getCollection('faq'))
+  .filter((f) => isPublic(f.data.status))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 6);
+
+const faqItems = faqAll.map((f) => ({ q: f.data.q, a: f.data.a, status: f.data.status }));
+
+// Concrete reasons only — no "quality", no "individual approach" (brief §09).
+const REASONS = [
+  {
+    title: 'Задачу можно показать фотографией',
+    text: 'Не нужно знать, как называется деталь, механизм или тип петли. Снимите — дальше наша забота.',
+  },
+  {
+    title: 'Беремся за отдельную деталь',
+    text: 'Можно прийти с одной дверцей, одной полкой или одной сломанной направляющей. Заказывать мебель целиком не обязательно.',
+  },
+  {
+    title: 'Ремонт и переделка вместо покупки',
+    text: 'Иногда корпус целый, а изношена только фурнитура. Тогда менять всю мебель незачем — и мы об этом скажем.',
+  },
+  {
+    title: 'Разговор без мебельных терминов',
+    text: 'Объясняем на нормальном языке. Если что-то непонятно по фото — спросим, а не будем гадать.',
+  },
+  {
+    title: 'Небольшая мастерская напрямую',
+    text: 'Задача не идёт через менеджера, дизайнера и отдел продаж. Вы разговариваете с теми, кто её и делает.',
+  },
+  {
+    title: 'Нестандартное — это нормально',
+    text: 'Кривая стена, труба в углу, скошенный потолок, размер, которого не бывает в магазине. Такие задачи интереснее типовых.',
+  },
+];
+---
+
+<Base
+  title="Мебель на заказ, ремонт и фурнитура в Ульяновске"
+  description="Мебель на заказ, ремонт, переделка и нестандартные детали в Ульяновске. Не знаете, как называется деталь? Просто сфотографируйте — посмотрим, что можно сделать."
+  canonical="/"
+  schema={[faqPage(faqItems.map(({ q, a }) => ({ q, a })))].filter(Boolean)}
+>
+  <!-- ================================================= 01 HERO -->
+  <section class="hero">
+    <div class="container hero__inner">
+      <div class="hero__copy">
+        <h1 class="hero__title">
+          Покажите, что нужно&nbsp;сделать.
+          <span>С остальным разберёмся.</span>
+        </h1>
+
+        <p class="hero__sub">
+          Мебель на заказ, ремонт, переделка и нестандартные детали
+          в&nbsp;Ульяновске. Не нужно знать названия деталей, тип механизма
+          и точные размеры — достаточно фотографии.
+        </p>
+
+        <div class="hero__actions">
+          <button class="btn btn--accent btn--lg" type="button" data-open-task data-cta="hero">
+            Показать задачу
+          </button>
+          <a class="btn btn--ghost btn--lg" href="/proekty/">Посмотреть работы</a>
+        </div>
+
+        {
+          primaryContact && (
+            <p class="hero__phone">
+              Или позвоните:{' '}
+              <a href={`tel:${primaryContact.tel}`} data-track="phone_click" data-track-where="hero">
+                {primaryContact.phone}
+              </a>
+              <span>{primaryContact.note}</span>
+            </p>
+          )
+        }
+      </div>
+
+      <div class="hero__media">
+        <Photo
+          name="hero-workshop"
+          alt="Мастерская: раскроенные детали корпусной мебели на верстаке"
+          brief="Небольшая мебельная мастерская изнутри. Верстак, раскроенные детали ЛДСП, ручной инструмент, стружка. Дневной свет из окна, документальная съёмка 35 мм, без постановки и без глянца."
+          ratio="4/5"
+          priority
+          sizes="(min-width: 68rem) 42vw, 100vw"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= 02 QUICK INTAKE -->
+  <PhotoIntake />
+
+  <!-- ================================================= MODEL B -->
+  <ProblemGrid />
+
+  <!-- ================================================= 03 SERVICES -->
+  {
+    services.length > 0 && (
+      <section class="section services">
+        <div class="container">
+          <div class="section-head">
+            <p class="eyebrow">Направления</p>
+            <h2>С чем можно обратиться</h2>
+            <p class="lede">
+              Если вашей задачи здесь нет — это не значит, что мы её не возьмём.
+              Проще показать и спросить.
+            </p>
+          </div>
+
+          <div class="grid grid--2 services__grid">
+            {services.map((s) => (
+              <ServiceCard
+                href={`/${s.id}/`}
+                title={s.data.title}
+                text={s.data.short}
+                image={s.data.hero}
+                size="lg"
+              />
+            ))}
+          </div>
+
+          <p class="services__all">
+            <a class="link" href="/uslugi/">Все направления и подразделы →</a>
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ================================================= 04 NAME IT -->
+  <NameItBlock />
+
+  <!-- ================================================= 05 PROJECTS -->
+  {
+    projects.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-head section-head--row">
+            <div>
+              <p class="eyebrow">Работы</p>
+              <h2>Как выглядит решённая задача</h2>
+            </div>
+            <a class="link" href="/proekty/">Все работы →</a>
+          </div>
+
+          <div class="grid grid--3">
+            {projects.map((p) => (
+              <ProjectCard
+                href={`/proekty/${p.id}/`}
+                title={p.data.title}
+                summary={p.data.summary}
+                kind={p.data.kind}
+                placeholder={p.data.placeholder}
+                image={p.data.hero}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ================================================= 07 PROCESS -->
+  <Steps tone="sunken" />
+
+  <!-- ================================================= 08 MASTER -->
+  <section class="section master">
+    <div class="container master__inner">
+      <div class="master__media">
+        <Photo
+          name="master-hands"
+          alt="Руки мастера размечают деталь перед сверлением"
+          brief="Руки мастера с карандашом и угольником размечают деталь ЛДСП на верстаке. Лицо не в кадре. Рабочие руки, стружка, дневной свет. Документально, 50 мм."
+          ratio="4/5"
+          sizes="(min-width: 62rem) 40vw, 100vw"
+        />
+      </div>
+
+      <div class="master__copy">
+        <p class="eyebrow">Мастерская</p>
+        <h2>Кто будет делать вашу мебель</h2>
+        <p class="master__lede">
+          Небольшая мастерская, а не производство с отделом продаж. Тот, кто
+          принимает задачу, и тот, кто её делает, — знают друг о друге всё.
+        </p>
+        <p>
+          Первым заявку смотрит человек, а не робот: если по фотографии
+          непонятно, что случилось, вам зададут один-два вопроса обычными
+          словами. Дальше задача уходит мастеру уже в понятном виде.
+        </p>
+        <p class="master__slot">
+          Здесь будет фотография и рассказ о мастере — как только он их
+          утвердит. Придумывать за него мы не стали.
+        </p>
+        <a class="btn btn--ghost" href="/o-mastere/">О мастерской</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================= 09 WHY -->
+  <section class="section section--sunken">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Почему сюда</p>
+        <h2>Зачем к нам обращаются</h2>
+      </div>
+
+      <ul class="reasons">
+        {
+          REASONS.map((r) => (
+            <li class="reasons__item reveal">
+              <h3>{r.title}</h3>
+              <p>{r.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================================================= 10 FAQ -->
+  {
+    faqItems.length > 0 && (
+      <FaqList
+        items={faqItems}
+        title="Что обычно спрашивают"
+        lede="Короткие ответы на вопросы, которые задают чаще всего."
+      />
+    )
+  }
+
+  <ShowTask
+    tone="ink"
+    title="Покажите свою задачу"
+    text="Одна фотография — уже достаточно, чтобы начать разговор. Всё остальное уточним сами."
+    shots={[
+      'общий вид мебели или места',
+      'крупно — то, что сломалось или не подходит',
+      'пример, который нравится, если он есть',
+    ]}
+  />
+</Base>
+
+<style>
+  /* ---- Hero ---- */
+  .hero {
+    padding-block: var(--sp-7) var(--sp-8);
+  }
+
+  .hero__inner {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: center;
+  }
+
+  /* On phones the message and the CTA come first; the image follows. */
+  .hero__media { margin-block-start: var(--sp-2); }
+
+  .hero__title {
+    font-size: var(--display);
+    line-height: var(--lh-display);
+    letter-spacing: var(--tracking-display);
+    font-weight: 650;
+  }
+  .hero__title span {
+    display: block;
+    color: var(--ink-3);
+  }
+
+  .hero__sub {
+    margin-block-start: var(--sp-5);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 44ch;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-block-start: var(--sp-6);
+  }
+  .hero__actions .btn { flex: 1 1 14rem; }
+
+  .hero__phone {
+    margin-block-start: var(--sp-5);
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+  .hero__phone a {
+    font-weight: 650;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .hero__phone span {
+    display: block;
+    margin-block-start: 0.25rem;
+    max-width: 42ch;
+  }
+
+
+  .services__all {
+    margin-block-start: var(--sp-5);
+    font-size: var(--step--1);
+  }
+
+  /* ---- Section head with a trailing link ---- */
+  .section-head--row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    max-width: none;
+  }
+
+  /* ---- Master ---- */
+  .master__inner {
+    display: grid;
+    gap: var(--sp-6);
+    align-items: center;
+  }
+
+  .master__copy { display: grid; gap: var(--sp-4); justify-items: start; }
+  .master__copy h2 { font-size: var(--step-4); }
+  .master__copy p { color: var(--ink-2); max-width: 48ch; line-height: 1.6; }
+  .master__lede { font-size: var(--step-1); color: var(--ink) !important; }
+
+  .master__slot {
+    padding: var(--sp-4);
+    background: var(--paper-sunken);
+    border-inline-start: 2px solid var(--accent);
+    border-radius: var(--r-sm);
+    font-size: var(--step--1);
+  }
+
+  /* ---- Reasons ---- */
+  .reasons {
+    display: grid;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .reasons__item {
+    padding-block: var(--sp-5);
+    border-block-start: 1px solid var(--line);
+  }
+  .reasons__item h3 {
+    font-size: var(--step-1);
+    margin-block-end: 0.4rem;
+  }
+  .reasons__item p {
+    color: var(--ink-2);
+    font-size: var(--step--1);
+    line-height: 1.55;
+    max-width: 46ch;
+  }
+
+  @media (min-width: 46rem) {
+    .reasons {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--sp-7);
+    }
+  }
+  @media (min-width: 72rem) {
+    .reasons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  @media (min-width: 62rem) {
+    .master__inner {
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+      gap: var(--sp-8);
+    }
+  }
+
+  @media (min-width: 68rem) {
+    .hero { padding-block: var(--sp-9) var(--sp-10); }
+    .hero__inner {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: var(--sp-9);
+    }
+    .hero__actions .btn { flex: 0 1 auto; }
+  }
+</style>

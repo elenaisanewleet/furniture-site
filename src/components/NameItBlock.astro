@@ -1,0 +1,228 @@
+---
+import Photo from './Photo.astro';
+
+/**
+ * The signature block (brief §04).
+ *
+ * Instead of teaching furniture vocabulary, it shows that the vocabulary is
+ * *our* job. Each card leads with the phrase a real person would use and
+ * only then, quietly, gives the term.
+ */
+const PARTS = [
+  {
+    name: 'part-hinge',
+    said: '«Вот эта штука, на которой держится дверца»',
+    term: 'петля',
+    alt: 'Мебельная петля крупным планом',
+    brief: 'Четырёхшарнирная мебельная петля крупно, установлена в дверце ЛДСП. Дневной свет, реальная бывшая в употреблении мебель.',
+  },
+  {
+    name: 'part-runner',
+    said: '«Рельса, по которой ездит ящик»',
+    term: 'направляющая',
+    alt: 'Направляющая выдвижного ящика',
+    brief: 'Шариковая направляющая полного выдвижения, вид сбоку на выдвинутом ящике. Немного пыли, реальная кухня.',
+  },
+  {
+    name: 'part-lift',
+    said: '«То, что держит дверцу поднятой»',
+    term: 'подъёмный механизм',
+    alt: 'Подъёмный механизм верхнего шкафа',
+    brief: 'Газовый подъёмник верхнего кухонного шкафчика в открытом положении, снизу вверх. Обычная кухня.',
+  },
+  {
+    name: 'part-handle',
+    said: '«Ручка отвалилась, и дырки разбились»',
+    term: 'крепление ручки',
+    alt: 'Разбитое отверстие от мебельной ручки',
+    brief: 'Фасад с вырванным креплением ручки — расковырянное отверстие в ЛДСП, следы от винта. Документально, без постановки.',
+  },
+  {
+    name: 'part-unknown',
+    said: '«Понятия не имею, что это»',
+    term: 'тоже нормальный ответ',
+    alt: 'Набор мелких мебельных деталей на верстаке',
+    brief: 'Горсть разных мебельных крепежей и деталей на деревянном верстаке, сверху. Смешанные, несортированные.',
+  },
+];
+---
+
+<section class="ni section--ink">
+  <div class="container">
+    <div class="ni__head">
+      <p class="eyebrow ni__eyebrow">Главное</p>
+      <h2 class="ni__title">Не знаете, как это&nbsp;называется?</h2>
+      <p class="ni__lede">
+        И не нужно. Искать название детали в интернете — не ваша работа.
+        Сфотографируйте её, а разбираться будем мы.
+      </p>
+    </div>
+
+    <ol class="ni__steps">
+      <li><span>1</span> Сделайте фото</li>
+      <li><span>2</span> Отправьте нам</li>
+      <li><span>3</span> Мастер посмотрит, что можно сделать</li>
+    </ol>
+
+    <div
+      class="ni__scroll scroll-x"
+      tabindex="0"
+      role="group"
+      aria-label="Примеры деталей, которые чаще всего не могут назвать"
+    >
+      <ul class="ni__parts">
+        {
+          PARTS.map((p) => (
+            <li class="ni__part">
+              <Photo
+                name={p.name}
+                alt={p.alt}
+                brief={p.brief}
+                ratio="1/1"
+                sizes="(min-width: 62rem) 18vw, 44vw"
+              />
+              <p class="ni__said">{p.said}</p>
+              <p class="ni__term">{p.term}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <div class="ni__cta">
+      <button class="btn btn--on-ink btn--lg" type="button" data-open-task data-cta="nameit" data-preset="part">
+        Сфотографировать деталь
+      </button>
+      <a class="ni__link" href="/detal-po-foto/">Как это работает →</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .ni { padding-block: var(--section-y); }
+
+  .ni__head { max-width: 44rem; }
+
+  .ni__eyebrow { color: color-mix(in srgb, var(--ink-invert) 60%, transparent); }
+  .ni__eyebrow::before { background: var(--accent-on-ink); }
+
+  .ni__title {
+    font-size: var(--display-sm);
+    line-height: var(--lh-display);
+    letter-spacing: var(--tracking-display);
+    margin-block-start: var(--sp-4);
+    text-wrap: balance;
+  }
+
+  .ni__lede {
+    margin-block-start: var(--sp-4);
+    font-size: var(--step-1);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--ink-invert) 72%, transparent);
+    max-width: 44ch;
+  }
+
+  .ni__steps {
+    display: grid;
+    gap: var(--sp-3);
+    list-style: none;
+    margin: var(--sp-7) 0 var(--sp-6);
+    padding: 0;
+    counter-reset: ni;
+  }
+  .ni__steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    letter-spacing: var(--tracking-heading);
+  }
+  .ni__steps span {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    flex: none;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent-on-ink);
+    color: var(--accent-on-ink);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .ni__scroll {
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    padding-block-end: var(--sp-3);
+  }
+
+  .ni__parts {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(9.5rem, 1fr);
+    gap: var(--sp-4);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ni__part :global(.photo) {
+    background: color-mix(in srgb, var(--ink-invert) 8%, transparent);
+    margin-block-end: var(--sp-3);
+  }
+  /* Placeholder ink must flip on the dark band. */
+  .ni__part :global(.photo--empty) { border-color: color-mix(in srgb, var(--ink-invert) 16%, transparent); }
+  .ni__part :global(.photo__ph) { color: color-mix(in srgb, var(--ink-invert) 55%, transparent); }
+  .ni__part :global(.photo__ph-alt) { color: color-mix(in srgb, var(--ink-invert) 55%, transparent); }
+  .ni__part :global(.photo__label) {
+    background: color-mix(in srgb, #000 45%, transparent);
+    border-block-start-color: color-mix(in srgb, var(--ink-invert) 14%, transparent);
+    color: color-mix(in srgb, var(--ink-invert) 60%, transparent);
+  }
+  .ni__part :global(.photo__label-name) { color: color-mix(in srgb, var(--ink-invert) 80%, transparent); }
+
+  .ni__said {
+    font-size: var(--step--1);
+    line-height: 1.4;
+    color: var(--ink-invert);
+  }
+
+  .ni__term {
+    margin-block-start: 0.25rem;
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-on-ink);
+  }
+
+  .ni__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-4);
+    margin-block-start: var(--sp-7);
+  }
+
+  .ni__link {
+    font-size: var(--step--1);
+    color: color-mix(in srgb, var(--ink-invert) 75%, transparent);
+    text-decoration: none;
+  }
+  .ni__link:hover { color: var(--ink-invert); text-decoration: underline; }
+
+  @media (min-width: 46rem) {
+    .ni__steps {
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: var(--sp-5);
+    }
+    .ni__steps li { align-items: start; flex-direction: column; gap: 0.6rem; }
+  }
+
+  @media (min-width: 62rem) {
+    .ni__parts { grid-auto-columns: minmax(0, 1fr); }
+    .ni__scroll { overflow: visible; margin-inline: 0; padding-inline: 0; }
+  }
+</style>

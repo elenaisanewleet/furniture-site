@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#fbfaf7"/>
+  <g transform="translate(80 74)">
+    <rect x="1.6" y="1.6" width="41" height="41" rx="5" fill="none" stroke="#17161a" stroke-width="3.2"/>
+    <path d="M15.5 1.6V42.6" stroke="#17161a" stroke-width="3.2"/>
+    <circle cx="15.5" cy="22" r="5" fill="#b4441f"/>
+  </g>
+  <text x="146" y="106" font-family="Onest, Inter, system-ui, sans-serif" font-size="30" font-weight="700" fill="#17161a">Мастерская</text>
+  <text x="80" y="300" font-family="Onest, Inter, system-ui, sans-serif" font-size="80" font-weight="650" fill="#17161a" letter-spacing="-2.4">Покажите, что нужно</text>
+  <text x="80" y="392" font-family="Onest, Inter, system-ui, sans-serif" font-size="80" font-weight="650" fill="#17161a" letter-spacing="-2.4">сделать. С остальным</text>
+  <text x="80" y="484" font-family="Onest, Inter, system-ui, sans-serif" font-size="80" font-weight="650" fill="#6e6a72" letter-spacing="-2.4">разберёмся.</text>
+  <text x="80" y="560" font-family="Inter, system-ui, sans-serif" font-size="27" fill="#46434a">Мебель, ремонт, фурнитура и нестандартные детали · Ульяновск</text>
+  <rect x="0" y="614" width="1200" height="16" fill="#b4441f"/>
+</svg>

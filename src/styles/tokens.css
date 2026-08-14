@@ -1,0 +1,178 @@
+/* =========================================================================
+   Design tokens
+   -------------------------------------------------------------------------
+   One warm paper surface, one near-black ink, one earthed accent.
+   Deliberately NOT the Russian furniture-site default of brown gradients,
+   wood-texture backgrounds and gold trim: the reference points here are
+   architectural monographs and craft journals.
+   ========================================================================= */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Surface & ink ------------------------------------------------- */
+  --paper: #fbfaf7;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f1eee8;
+  --paper-invert: #171619;
+
+  --ink: #171619;
+  --ink-2: #46434a;
+  --ink-3: #6e6a72;
+  --ink-invert: #fbfaf7;
+
+  --line: #dfdad2;
+  --line-strong: #c6c0b6;
+
+  /* ---- Accent ---------------------------------------------------------
+     Terracotta. Used as a *marker*, never as decoration: it means
+     "this is where you show your task". Primary buttons stay ink.        */
+  --accent: #b4441f;
+  --accent-ink: #8f3517; /* accent as text on paper — AA at body size */
+  /* Accent as text on the inverted (ink) band. The plain --accent only
+     reaches 3.25:1 there, so small type must use this instead. */
+  --accent-on-ink: #e4794e;
+  --accent-soft: #f7e9e2;
+  --accent-on: #ffffff;
+
+  --focus: #1d4ed8;
+
+  /* ---- Type ------------------------------------------------------------ */
+  --font-display: 'Onest', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  /* Fluid scale — 360px → 1440px viewport */
+  --step--2: clamp(0.72rem, 0.70rem + 0.09vw, 0.78rem);
+  --step--1: clamp(0.83rem, 0.80rem + 0.14vw, 0.92rem);
+  --step-0: clamp(0.98rem, 0.94rem + 0.18vw, 1.09rem);
+  --step-1: clamp(1.15rem, 1.08rem + 0.32vw, 1.36rem);
+  --step-2: clamp(1.35rem, 1.23rem + 0.53vw, 1.7rem);
+  --step-3: clamp(1.6rem, 1.39rem + 0.9vw, 2.12rem);
+  --step-4: clamp(1.88rem, 1.55rem + 1.42vw, 2.66rem);
+  --step-5: clamp(2.2rem, 1.7rem + 2.2vw, 3.32rem);
+  --step-6: clamp(2.6rem, 1.8rem + 3.5vw, 4.15rem);
+
+  /* Hero-scale display type */
+  --display: clamp(2.35rem, 1.5rem + 3.4vw, 4.25rem);
+  --display-sm: clamp(2rem, 1.45rem + 2.3vw, 3.3rem);
+
+  --lh-tight: 1.02;
+  --lh-display: 1.06;
+  --lh-heading: 1.14;
+  --lh-body: 1.62;
+
+  --tracking-display: -0.035em;
+  --tracking-heading: -0.022em;
+  --tracking-eyebrow: 0.11em;
+
+  /* ---- Space ----------------------------------------------------------- */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  /* Vertical rhythm between major page sections */
+  --section-y: clamp(3.5rem, 2rem + 6vw, 7.5rem);
+  --section-y-sm: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --container: 78rem;
+  --container-wide: 90rem;
+  --container-prose: 40rem;
+  --gutter: clamp(1.15rem, 0.6rem + 2.4vw, 3rem);
+
+  /* ---- Shape ----------------------------------------------------------- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* ---- Elevation — restrained, warm-tinted ----------------------------- */
+  --shadow-1: 0 1px 2px rgb(23 22 25 / 0.05), 0 1px 1px rgb(23 22 25 / 0.04);
+  --shadow-2: 0 4px 14px -4px rgb(23 22 25 / 0.10), 0 2px 4px -2px rgb(23 22 25 / 0.06);
+  --shadow-3: 0 18px 44px -12px rgb(23 22 25 / 0.20), 0 6px 14px -8px rgb(23 22 25 / 0.10);
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 140ms;
+  --dur-2: 240ms;
+  --dur-3: 420ms;
+
+  --header-h: 3.75rem;
+  --sticky-cta-h: 4.5rem;
+}
+
+@media (min-width: 60rem) {
+  :root {
+    --header-h: 4.75rem;
+    --sticky-cta-h: 0rem;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Dark scheme — token swap only, no component overrides.
+   ------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --paper: #131215;
+    --paper-raised: #1b1a1e;
+    --paper-sunken: #0e0d10;
+    --paper-invert: #f2f0ec;
+
+    --ink: #f2f0ec;
+    --ink-2: #b4afb6;
+    --ink-3: #8a858f;
+    --ink-invert: #131215;
+
+    --line: #2e2c32;
+    --line-strong: #45424a;
+
+    --accent: #e4794e;
+    --accent-ink: #f0a183;
+    --accent-on-ink: #8f3517;
+    --accent-soft: #2a1d18;
+    --accent-on: #17110d;
+
+    --focus: #7ba7ff;
+
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-2: 0 4px 14px -4px rgb(0 0 0 / 0.55);
+    --shadow-3: 0 18px 44px -12px rgb(0 0 0 / 0.7);
+  }
+}
+
+:root[data-theme='dark'] {
+  --paper: #131215;
+  --paper-raised: #1b1a1e;
+  --paper-sunken: #0e0d10;
+  --paper-invert: #f2f0ec;
+
+  --ink: #f2f0ec;
+  --ink-2: #b4afb6;
+  --ink-3: #8a858f;
+  --ink-invert: #131215;
+
+  --line: #2e2c32;
+  --line-strong: #45424a;
+
+  --accent: #e4794e;
+  --accent-ink: #f0a183;
+  --accent-on-ink: #8f3517;
+  --accent-soft: #2a1d18;
+  --accent-on: #17110d;
+
+  --focus: #7ba7ff;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-2: 0 4px 14px -4px rgb(0 0 0 / 0.55);
+  --shadow-3: 0 18px 44px -12px rgb(0 0 0 / 0.7);
+}

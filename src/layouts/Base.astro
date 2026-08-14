@@ -1,0 +1,163 @@
+---
+import '~/styles/fonts.css';
+import '~/styles/tokens.css';
+import '~/styles/base.css';
+
+import Header from '~/components/Header.astro';
+import Footer from '~/components/Footer.astro';
+import StickyCta from '~/components/StickyCta.astro';
+import TaskDialog from '~/components/TaskDialog.astro';
+import { site } from '~/data/site';
+import { localBusiness, webSite, breadcrumbs, graph } from '~/lib/schema';
+import { SHOW_UNCONFIRMED } from '~/lib/facts';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path only, e.g. "/remont-mebeli/". Canonical is built from it. */
+  canonical?: string;
+  noindex?: boolean;
+  breadcrumb?: { name: string; href: string }[];
+  /** Extra schema.org nodes merged into the page @graph. */
+  schema?: unknown[];
+  ogImage?: string;
+  /** Hides the persistent mobile CTA on pages that already are the form. */
+  hideStickyCta?: boolean;
+  bodyClass?: string;
+}
+
+const {
+  title,
+  description,
+  canonical = Astro.url.pathname,
+  noindex = false,
+  breadcrumb = [],
+  schema = [],
+  ogImage = '/og-default.svg',
+  hideStickyCta = false,
+  bodyClass = '',
+} = Astro.props;
+
+const origin = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const canonicalUrl = new URL(canonical, Astro.site ?? 'https://example.com').toString();
+
+const fullTitle =
+  title === site.brand.name ? title : `${title} — ${site.brand.name}`;
+
+const nodes = [
+  localBusiness(origin),
+  webSite(origin),
+  breadcrumb.length > 1 ? breadcrumbs(origin, breadcrumb) : null,
+  ...schema,
+];
+---
+
+<!doctype html>
+<html lang="ru" prefix="og: https://ogp.me/ns#">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {!noindex && <meta name="robots" content="index, follow, max-image-preview:large" />}
+
+    <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#131215" media="(prefers-color-scheme: dark)" />
+    <meta name="format-detection" content="telephone=yes" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.brand.name} />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site ?? 'https://example.com').toString()} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- Body font is needed for first paint; display font follows immediately. -->
+    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/onest-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+
+    <script is:inline>
+      // Marks JS availability so CSS can safely hide reveal-on-scroll content.
+      document.documentElement.classList.add('js');
+    </script>
+
+    <script type="application/ld+json" set:html={graph(nodes)} is:inline />
+
+    <slot name="head" />
+  </head>
+
+  <body
+    class={bodyClass}
+    data-review={SHOW_UNCONFIRMED ? 'true' : undefined}
+    data-metrika={site.metrikaId || undefined}
+  >
+    <a class="skip-link" href="#main">К основному содержанию</a>
+
+    {
+      SHOW_UNCONFIRMED && (
+        <div class="review-bar no-print">
+          <strong>Режим проверки.</strong> Показаны неподтверждённые пункты.
+          <a href="/review/">Список того, что нужно уточнить →</a>
+        </div>
+      )
+    }
+
+    <Header />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer />
+
+    {!hideStickyCta && <StickyCta />}
+    <TaskDialog />
+
+    <script>
+      import '~/scripts/app.ts';
+    </script>
+
+    {
+      site.metrikaId && (
+        <script is:inline define:vars={{ id: site.metrikaId }}>
+          {`(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+          m[i].l=1*new Date();for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+          (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+          ym(id,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true});`}
+        </script>
+      )
+    }
+  </body>
+</html>
+
+<style>
+  .review-bar {
+    position: relative;
+    z-index: 60;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    justify-content: center;
+    padding: 0.55rem var(--gutter);
+    background: #7c2d12;
+    color: #fff;
+    font-size: var(--step--1);
+    text-align: center;
+  }
+  .review-bar a {
+    color: #fff;
+    font-weight: 600;
+  }
+</style>

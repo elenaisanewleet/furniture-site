@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '~/layouts/Base.astro';
+import Breadcrumbs from '~/components/Breadcrumbs.astro';
+import ServiceCard from '~/components/ServiceCard.astro';
+import ProblemGrid from '~/components/ProblemGrid.astro';
+import ShowTask from '~/components/ShowTask.astro';
+import { isPublic } from '~/lib/facts';
+
+const all = (await getCollection('services'))
+  .filter((s) => isPublic(s.data.status))
+  .sort((a, b) => a.data.order - b.data.order);
+
+const GROUPS = [
+  { key: 'mebel', title: 'Новая мебель', text: 'Когда нужно изготовить то, чего сейчас нет.' },
+  { key: 'remont', title: 'Ремонт и переделка', text: 'Когда мебель есть, но что-то с ней не так.' },
+  { key: 'furnitura', title: 'Фурнитура', text: 'Когда сломалась или износилась деталь.' },
+  { key: 'detali', title: 'Детали на заказ', text: 'Когда нужна одна вещь, а не мебель целиком.' },
+] as const;
+
+const trail = [
+  { name: 'Главная', href: '/' },
+  { name: 'Услуги', href: '/uslugi/' },
+];
+---
+
+<Base
+  title="Услуги мастерской"
+  description="Мебель на заказ, ремонт, переделка, фурнитура и отдельные детали в Ульяновске. Выберите направление или просто покажите задачу — разберёмся вместе."
+  canonical="/uslugi/"
+  breadcrumb={trail}
+>
+  <Breadcrumbs trail={trail} />
+
+  <header class="container us__head">
+    <h1>С чем можно обратиться</h1>
+    <p class="lede">
+      Разделы существуют для удобства, а не для того, чтобы вы обязательно
+      выбрали правильный. Если не понимаете, куда относится ваша задача, —
+      просто покажите её.
+    </p>
+    <button class="btn btn--accent btn--lg" type="button" data-open-task data-cta="uslugi_head">
+      Показать задачу
+    </button>
+  </header>
+
+  {
+    GROUPS.map((g) => {
+      const items = all.filter((s) => s.data.group === g.key);
+      if (!items.length) return null;
+      return (
+        <section class="section--sm us__group">
+          <div class="container">
+            <div class="section-head">
+              <p class="eyebrow">{g.title}</p>
+              <h2>{g.text}</h2>
+            </div>
+            <div class="grid grid--3">
+              {items.map((s) => (
+                <ServiceCard
+                  href={`/${s.id}/`}
+                  title={s.data.title}
+                  text={s.data.short}
+                  image={s.data.hero}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    })
+  }
+
+  <ProblemGrid
+    title="Или начните с того, что случилось"
+    lede="Второй способ найти нужное: не по названию мебели, а по тому, что пошло не так."
+    compact
+  />
+
+  <ShowTask tone="ink" />
+</Base>
+
+<style>
+  .us__head {
+    padding-block: var(--sp-6) var(--sp-8);
+    display: grid;
+    gap: var(--sp-5);
+    justify-items: start;
+    max-width: 44rem;
+  }
+  .us__head h1 { font-size: var(--display-sm); line-height: var(--lh-display); }
+  .us__group + .us__group { padding-block-start: 0; }
+</style>

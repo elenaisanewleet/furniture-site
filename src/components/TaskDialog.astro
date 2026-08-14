@@ -1,0 +1,120 @@
+---
+import TaskForm from './TaskForm.astro';
+---
+
+<!--
+  One dialog per page, opened by any [data-open-task] control. The same flow
+  also exists as a real page at /pokazat-zadachu/, so the CTA never depends
+  on JS: buttons that can't open the dialog are rewritten into links to it.
+-->
+<dialog class="tdlg" data-task-dialog aria-labelledby="tdlg-title">
+  <div class="tdlg__panel">
+    <header class="tdlg__head">
+      <div>
+        <p class="tdlg__eyebrow">Мастерская</p>
+        <h2 class="tdlg__title" id="tdlg-title">Покажите, что нужно сделать</h2>
+      </div>
+      <button type="button" class="tdlg__close" data-close-task>
+        <span class="visually-hidden">Закрыть</span>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <div class="tdlg__body">
+      <TaskForm id="task-dialog" compact />
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .tdlg {
+    width: min(42rem, 100vw);
+    max-width: 100vw;
+    max-height: 100dvh;
+    margin: 0 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    overflow: visible;
+  }
+
+  .tdlg::backdrop {
+    background: rgb(12 11 14 / 0.55);
+    backdrop-filter: blur(3px);
+  }
+
+  .tdlg__panel {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    background: var(--paper);
+    border-inline-start: 1px solid var(--line);
+  }
+
+  .tdlg__head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    padding: var(--sp-5) var(--sp-5) var(--sp-4);
+    border-block-end: 1px solid var(--line);
+  }
+
+  .tdlg__eyebrow {
+    font-size: var(--step--2);
+    font-weight: 600;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-block-end: 0.25rem;
+  }
+
+  .tdlg__title {
+    font-size: var(--step-2);
+    margin: 0;
+  }
+
+  .tdlg__close {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: none;
+    margin: -0.35rem -0.35rem 0 0;
+    border-radius: 50%;
+    color: var(--ink-2);
+    transition: background-color var(--dur-1) var(--ease);
+  }
+  .tdlg__close:hover { background: var(--paper-sunken); color: var(--ink); }
+  .tdlg__close svg { width: 1.1rem; }
+
+  .tdlg__body {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--sp-5) var(--sp-5) var(--sp-8);
+  }
+
+  /* Slide in from the edge on desktop, up from the bottom on phones. */
+  @media (min-width: 46rem) {
+    .tdlg[open] { animation: tdlg-slide var(--dur-3) var(--ease); }
+    @keyframes tdlg-slide { from { transform: translateX(100%); } }
+  }
+
+  @media (max-width: 45.99rem) {
+    .tdlg { margin: auto 0 0; width: 100vw; }
+    .tdlg__panel {
+      height: min(92dvh, 100dvh);
+      border: 0;
+      border-start-start-radius: var(--r-xl);
+      border-start-end-radius: var(--r-xl);
+    }
+    .tdlg[open] { animation: tdlg-up var(--dur-3) var(--ease); }
+    @keyframes tdlg-up { from { transform: translateY(100%); } }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tdlg[open] { animation: none; }
+  }
+</style>
