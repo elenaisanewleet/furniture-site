@@ -67,6 +67,103 @@ Settings → **Domains** → добавить домен и прописать �
 
 ---
 
+## Обычный хостинг (ISPmanager, cPanel, любой с FTP/SSH)
+
+Сайт статический, поэтому подходит **любой** тариф — Node, PHP и базы не
+нужны. Вся сборка занимает 60 файлов и 3,2 МБ.
+
+Разница с Vercel одна: собирает не хостинг, а вы у себя. `SITE_URL`
+подставляется **в момент сборки**, значит домен нужно указать в команде.
+
+### Разово
+
+1. Настроить SSH-ключ в панели хостинга (или взять доступы по FTP).
+2. Узнать путь до корня сайта: обычно `public_html`, `www` или
+   `domains/ваш-домен.ru/public_html`.
+
+### Каждый раз
+
+```bash
+SITE_URL=https://ваш-домен.ru \
+DEPLOY_HOST=u123456@ssh.hosting.ru \
+DEPLOY_PATH=/home/u123456/public_html \
+./scripts/deploy.sh
+```
+
+Скрипт собирает сайт с нужным доменом, прогоняет проверку доступности и
+заливает `dist/` через rsync. Посмотреть, что уедет, ничего не меняя:
+добавьте `--dry-run`.
+
+Если SSH нет и есть только FTP — то же самое руками: собрать
+`SITE_URL=https://ваш-домен.ru npm run build` и залить **содержимое**
+папки `dist/` (не саму папку) в корень сайта любым FTP-клиентом.
+
+### Настройка веб-сервера
+
+В `public/.htaccess` уже лежит конфигурация для Apache и LiteSpeed — а это
+почти весь российский шёред-хостинг. При сборке она попадает в `dist/` и
+уезжает вместе с сайтом, делать ничего не нужно. Там: кодировка,
+страница 404, редирект на https, кэш, сжатие, заголовки безопасности.
+
+**Про кодировку отдельно.** Часть хостингов по умолчанию отдаёт latin-1, и
+тогда весь русский текст превращается в крокозябры — сайт выглядит
+сломанным целиком, хотя с ним всё в порядке. `AddDefaultCharset utf-8` в
+`.htaccess` это закрывает. Если после первой выкладки видите «ÐœÐ°ÑÑ‚ÐµÑ€»
+— значит хостинг `.htaccess` не прочитал, ищите настройку кодировки в
+панели.
+
+Если хостинг на **nginx** (Timeweb, Selectel и подобные), `.htaccess` не
+читается, и нужный кусок конфига выглядит так:
+
+```nginx
+charset utf-8;
+charset_types text/html text/css application/javascript application/json image/svg+xml;
+
+index index.html;
+error_page 404 /404.html;
+
+# trailingSlash: 'always' — каждая страница лежит папкой с index.html
+location / {
+    try_files $uri $uri/ =404;
+}
+
+location /_astro/ {
+    add_header Cache-Control "public, max-age=31536000, immutable";
+}
+
+location /fonts/ {
+    add_header Cache-Control "public, max-age=31536000";
+}
+
+location ~* \.html$ {
+    add_header Cache-Control "public, max-age=0, must-revalidate";
+}
+
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+
+gzip on;
+gzip_types text/css application/javascript application/json image/svg+xml;
+```
+
+### Про `/admin/`
+
+Это редактор контента Decap CMS. Он git-овый: правки уходят коммитами в
+GitHub, а для входа нужен OAuth-посредник, которого на обычном хостинге
+нет. То есть страница откроется, но войти в неё не выйдет.
+
+Поэтому `scripts/deploy.sh` папку `admin/` не выкладывает. Пока редактор
+не настроен, ей на боевом сайте делать нечего. Локально он работает без
+всякой настройки:
+
+```bash
+npx decap-server   # в одном окне
+npm run dev        # в другом, дальше открыть /admin/
+```
+
+---
+
 ## Приём заявок
 
 Форма отправляет данные на адрес из `PUBLIC_LEAD_ENDPOINT`. Пока он пуст,

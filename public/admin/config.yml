@@ -11,8 +11,10 @@
 
 backend:
   name: github
-  repo: elenaisanewleet/furniture-site   # ← проверьте
-  branch: main
+  repo: elenaisanewleet/furniture-site
+  # Ветка, в которую редактор пишет правки. Должна существовать в
+  # репозитории — иначе вход в редактор заканчивается ошибкой.
+  branch: claude/furniture-workshop-site-ulyanovsk-d8ujer
 
 local_backend: true
 publish_mode: editorial_workflow
