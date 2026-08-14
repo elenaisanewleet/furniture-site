@@ -465,10 +465,18 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
 
   @media (min-width: 60rem) {
     .hdr__nav { display: block; }
-    .hdr__phone { display: inline-flex; }
     .hdr__cta { display: inline-flex; }
     .hdr__burger { display: none; }
     .mnav { display: none !important; }
+  }
+
+  /* Телефон в шапке появляется позже остального. Между 960 и 1200 меню,
+     номер и кнопка вместе уже не помещаются — строка вылезает за край и
+     на всём сайте появляется горизонтальная прокрутка. Жертвуем номером:
+     кнопка ведёт к тому же разговору, а телефон повторён в подвале, в
+     контактах и в липкой панели на телефоне. */
+  @media (min-width: 75rem) {
+    .hdr__phone { display: inline-flex; }
   }
 
   @media (max-width: 59.99rem) {

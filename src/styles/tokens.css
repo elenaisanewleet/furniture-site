@@ -55,9 +55,12 @@
   --signal-100: #f8ded8;
   --signal-500: #d8402a;
   --signal-600: #b02f1d;
+  --signal-700: #8f2517;
 
   --ok-500: #3f7d4e;
   --warn-500: #c08a3e;
+  /* Тот же янтарь, но пригодный для текста: 4.8:1 по бумаге. */
+  --warn-text: #8a5e22;
 
   /* ---- Роли поверхностей ------------------------------------------------
      Имена слева — те, что уже читает весь сайт (--paper, --ink, --line).
@@ -70,7 +73,7 @@
 
   --ink: var(--ink-900);
   --ink-2: var(--ink-500);
-  --ink-3: #7d766b; /* темнее --ink-300: тот даёт 2.6:1 по бумаге */
+  --ink-3: #61666a; /* 4.9:1 по самому тёмному фону, --paper-sunken */
   --ink-invert: var(--paper-0);
 
   --line: rgb(20 18 15 / 0.14);
@@ -94,7 +97,7 @@
   --draw-paper: var(--paper-0);
   --draw-ink: var(--ink-900);
   --draw-ink-2: var(--zinc-700);
-  --draw-faint: #6f767a; /* 4.7:1 по --paper-0 */
+  --draw-faint: #5f6468; /* 4.9:1 по мату — он темнее поля чертежа */
   --draw-accent: var(--signal-500);
   --draw-frame: var(--zinc-300);
   --draw-grid: rgb(20 18 15 / 0.055);
@@ -274,7 +277,9 @@
     --draw-grid-inv: rgb(20 18 15 / 0.06);
     --draw-grid-2-inv: rgb(20 18 15 / 0.13);
 
-    --photo-mat: #24232a;
+    --warn-text: var(--pine-300);
+    --warn-text: var(--pine-300);
+  --photo-mat: #24232a;
 
     --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
     --shadow-2: 0 12px 32px -12px rgb(0 0 0 / 0.6);
@@ -323,6 +328,7 @@
   --draw-grid-inv: rgb(20 18 15 / 0.06);
   --draw-grid-2-inv: rgb(20 18 15 / 0.13);
 
+  --warn-text: var(--pine-300);
   --photo-mat: #24232a;
 
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);

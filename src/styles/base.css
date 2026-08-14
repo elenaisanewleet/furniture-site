@@ -318,11 +318,15 @@ a {
 /* Кнопка. Заливка меняется при наведении, при нажатии кнопка уходит на
    пиксель вниз — и всё. Ни масштаба, ни тени, ни подпрыгивания. */
 .btn {
-  --btn-bg: var(--signal-500);
+  /* Заливка кнопки — тёмная ступень сигнала, а не основная: белая подпись
+     по #d8402a даёт 4.48 и не проходит по контрасту. Сам сигнальный цвет
+     остаётся фирменным и живёт в метках, фокусе и границах, где норма для
+     нетекстовых элементов другая. */
+  --btn-bg: var(--signal-600);
   --btn-fg: var(--paper-0);
-  --btn-bd: var(--signal-500);
-  --btn-bg-hover: var(--signal-600);
-  --btn-bd-hover: var(--signal-600);
+  --btn-bd: var(--signal-600);
+  --btn-bg-hover: var(--signal-700);
+  --btn-bd-hover: var(--signal-700);
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -341,7 +345,12 @@ a {
   letter-spacing: -0.01em;
   text-decoration: none;
   text-align: center;
-  white-space: nowrap;
+  /* Подписи у нас длиннее, чем в исходной системе: «Открыть определитель
+     детали» в 318px не помещается в 280px содержимого на узком экране, а
+     запрет переноса превращает это в горизонтальную прокрутку страницы.
+     На широком экране запрет остаётся — там он бережёт кнопку от разрыва
+     на две строки без нужды. */
+  white-space: normal;
   transition:
     background-color var(--dur-2) var(--ease),
     color var(--dur-2) var(--ease),
@@ -375,11 +384,11 @@ a {
 }
 
 .btn--accent {
-  --btn-bg: var(--accent);
-  --btn-fg: var(--accent-on);
-  --btn-bd: var(--accent);
-  --btn-bg-hover: var(--signal-600);
-  --btn-bd-hover: var(--signal-600);
+  --btn-bg: var(--signal-600);
+  --btn-fg: var(--paper-0);
+  --btn-bd: var(--signal-600);
+  --btn-bg-hover: var(--signal-700);
+  --btn-bd-hover: var(--signal-700);
 }
 
 .btn--on-ink {
@@ -396,6 +405,10 @@ a {
   --btn-bd: color-mix(in srgb, var(--ink-invert) 38%, transparent);
   --btn-bg-hover: color-mix(in srgb, var(--ink-invert) 10%, transparent);
   --btn-bd-hover: var(--ink-invert);
+}
+
+@media (min-width: 34rem) {
+  .btn { white-space: nowrap; }
 }
 
 /* Главное действие — выше и крупнее: на телефоне оно под большим пальцем. */

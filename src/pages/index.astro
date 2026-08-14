@@ -456,13 +456,22 @@ const REASONS = [
 
   .hero__media { position: relative; }
   /* Смещённый контур здесь один: тень листа и рамка — это одно и то же,
-     а две подложки друг под другом читаются как брак печати. */
-  .hero__frame {
-    position: absolute;
-    inset: 0;
-    translate: 0.85rem 0.85rem;
-    border: 1px solid color-mix(in srgb, var(--accent-on-ink) 60%, transparent);
-    z-index: -1;
+     а две подложки друг под другом читаются как брак печати.
+
+     На узком экране фотография занимает всю ширину колонки, и смещённая
+     рамка вылезает за край страницы — появляется горизонтальная прокрутка
+     на всём сайте. Поэтому она включается только там, где есть запас. */
+  .hero__frame { display: none; }
+
+  @media (min-width: 46rem) {
+    .hero__frame {
+      display: block;
+      position: absolute;
+      inset: 0;
+      translate: 0.85rem 0.85rem;
+      border: 1px solid color-mix(in srgb, var(--accent-on-ink) 60%, transparent);
+      z-index: -1;
+    }
   }
 
   /* ---- Marquee ---- */

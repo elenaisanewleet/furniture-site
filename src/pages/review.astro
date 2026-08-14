@@ -214,8 +214,8 @@ const byArea = OPEN_QUESTIONS.reduce<Record<string, typeof OPEN_QUESTIONS>>((acc
     font-size: var(--step--2);
     white-space: nowrap;
   }
-  .rv__badge[data-s='hypothesis'] { background: color-mix(in srgb, #d97706 22%, transparent); }
-  .rv__badge[data-s='needs-confirmation'] { background: color-mix(in srgb, #dc2626 18%, transparent); }
+  .rv__badge[data-s='hypothesis'] { background: color-mix(in srgb, var(--warn-500) 22%, transparent); }
+  .rv__badge[data-s='needs-confirmation'] { background: color-mix(in srgb, var(--signal-500) 18%, transparent); }
 
   .rv__note { font-size: var(--step--1); color: var(--ink-2); line-height: 1.6; margin-block-end: var(--sp-4); max-width: 60ch; }
   .rv__list { display: grid; gap: 0.5rem; padding-inline-start: 1.1em; font-size: var(--step--1); }

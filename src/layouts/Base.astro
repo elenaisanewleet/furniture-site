@@ -75,8 +75,8 @@ const nodes = [
     {hideFromSearch && <meta name="robots" content="noindex, nofollow" />}
     {!hideFromSearch && <meta name="robots" content="index, follow, max-image-preview:large" />}
 
-    <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#131215" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#eef1f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16151a" media="(prefers-color-scheme: dark)" />
     <meta name="format-detection" content="telephone=yes" />
 
     <meta property="og:type" content="website" />
@@ -94,9 +94,10 @@ const nodes = [
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
-    <!-- Body font is needed for first paint; display font follows immediately. -->
-    <link rel="preload" href="/fonts/inter-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/onest-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- Golos Text держит и текст, и заголовки, поэтому предзагружается одна
+         кириллическая подрезка: латиница на русской странице почти не нужна,
+         а моно подхватывается позже — им набраны только лейблы. -->
+    <link rel="preload" href="/fonts/golos-cyrillic.woff2" as="font" type="font/woff2" crossorigin />
 
     <script is:inline>
       // Marks JS availability so CSS can safely hide reveal-on-scroll content.
@@ -167,13 +168,13 @@ const nodes = [
     gap: 0.35rem 0.75rem;
     justify-content: center;
     padding: 0.55rem var(--gutter);
-    background: #7c2d12;
-    color: #fff;
+    background: var(--signal-600);
+    color: var(--paper-0);
     font-size: var(--step--1);
     text-align: center;
   }
   .review-bar a {
-    color: #fff;
+    color: var(--paper-0);
     font-weight: 600;
   }
 </style>

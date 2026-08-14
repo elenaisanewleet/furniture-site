@@ -100,8 +100,10 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
     text-transform: uppercase;
     color: var(--draw-faint);
   }
+  /* Номер листа лежит на мате, а не на белом поле чертежа: сигнальный цвет
+     там даёт 3.6:1. Берём тёмную ступень — 5.2:1. */
   .dw__sheet {
-    color: var(--draw-accent);
+    color: var(--accent-ink);
   }
   .dw__rule {
     flex: 1;

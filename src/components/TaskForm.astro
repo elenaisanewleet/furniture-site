@@ -387,7 +387,7 @@ const tgBot = site.telegram.bot;
     width: 1.7rem;
     height: 1.7rem;
     flex: none;
-    border-radius: 50%;
+    border-radius: var(--r-sm);
     background: var(--accent-soft);
     color: var(--accent-ink);
     font-size: 0.82rem;
@@ -513,9 +513,9 @@ const tgBot = site.telegram.bot;
     height: 1.4rem;
     display: grid;
     place-items: center;
-    border-radius: 50%;
-    background: rgb(23 22 25 / 0.72);
-    color: #fff;
+    border-radius: var(--r-sm);
+    background: color-mix(in srgb, var(--ink-900) 78%, transparent);
+    color: var(--paper-0);
     font-size: 0.85rem;
     line-height: 1;
   }
@@ -570,10 +570,10 @@ const tgBot = site.telegram.bot;
   }
   .tf__opt { font-weight: 400; color: var(--ink-3); }
 
-  .tf__field input[aria-invalid='true'] { border-color: #b91c1c; }
+  .tf__field input[aria-invalid='true'] { border-color: var(--signal-600); }
   .tf__err {
     font-size: var(--step--2);
-    color: #b91c1c;
+    color: var(--signal-600);
     margin: 0;
     min-height: 0;
   }
@@ -635,6 +635,9 @@ const tgBot = site.telegram.bot;
     font-size: var(--step--1);
   }
   .tf__voice-btn[data-recording] { border-color: var(--accent); color: var(--accent-ink); }
+  /* Единственная окружность на сайте. В системе круглых форм нет, но
+     README отдельно разрешает круг и квадрат как глифы механики записи:
+     это не форма элемента, а обозначение состояния, как на диктофоне. */
   .tf__voice-dot {
     width: 0.6rem;
     height: 0.6rem;
@@ -676,7 +679,7 @@ const tgBot = site.telegram.bot;
     place-items: center;
     width: 3.4rem;
     height: 3.4rem;
-    border-radius: 50%;
+    border-radius: var(--r-sm);
     background: var(--accent-soft);
     color: var(--accent-ink);
   }
@@ -695,10 +698,13 @@ const tgBot = site.telegram.bot;
 
   .tf__tg { display: grid; gap: var(--sp-3); justify-items: start; }
   .tf__tg[hidden] { display: none; }
+  /* Единственный цвет вне палитры: фирменный синий Telegram. Он не сигнал,
+     а знак чужого сервиса — перекрасить его значило бы соврать, куда ведёт
+     кнопка. Поэтому исключение, и оно одно. */
 
   .btn--tg {
     --btn-bg: #2aabee;
-    --btn-fg: #fff;
+    --btn-fg: var(--paper-0);
     --btn-bd: #2aabee;
   }
   .btn--tg svg { width: 1.15rem; }
