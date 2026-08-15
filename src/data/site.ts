@@ -32,7 +32,8 @@ export const site = {
     /** Used where the bare word would be ambiguous (title tags, schema). */
     legalIsh: 'Мебельная мастерская',
     tagline: 'мебель · фурнитура · ремонт',
-    status: 'needs-confirmation' as FactStatus,
+    /* Мастер выбрал оставить это название (анкета, вопрос 26). */
+    status: 'fact' as FactStatus,
   },
 
   /** Positioning line used in <title> suffixes and schema description. */

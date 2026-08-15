@@ -6,7 +6,7 @@ order: 20
 services:
   - detali-na-zakaz
   - peredelka-mebeli
-status: hypothesis
+status: fact
 ---
 
 Старая дверца, даже сломанная, очень помогает: по ней снимаются размеры и присадка. Если её нет, снимают размеры проёма и соседних дверец.

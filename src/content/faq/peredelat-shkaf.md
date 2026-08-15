@@ -5,7 +5,7 @@ group: remont
 order: 30
 services:
   - peredelka-mebeli
-status: hypothesis
+status: fact
 ---
 
 Многое зависит от того, как шкаф собран: разборная конструкция на эксцентриках даёт больше свободы, чем склеенная намертво.
