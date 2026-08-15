@@ -10,7 +10,7 @@
  * role="img" с тем же alt, что был бы у фотографии, а всю внутреннюю
  * типографику прячет от скринридера.
  */
-import { pickMotif, sheetCode } from '~/lib/drawings';
+import { pickMotif } from '~/lib/drawings';
 
 interface Props {
   slot: string;
@@ -24,17 +24,20 @@ interface Props {
 const { slot, alt, caption, compact = false } = Astro.props;
 
 const motif = pickMotif(slot);
-const sheet = sheetCode(slot);
-const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
+const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}`;
 ---
 
 <div class:list={['dw', compact && 'dw--compact']} role="img" aria-label={alt}>
   {
     !compact && (
       <div class="dw__head" aria-hidden="true">
-        <span class="dw__sheet">рис {sheet}</span>
+        {/* Номера здесь когда-то были, и это была подделка под документ:
+            их считал хеш от имени слота. Выглядели они как ссылка на лист
+            чертежа, которого не существует, — а сайт построен на том, что
+            ничего не выдумывает. Осталось только правдивое. */}
+        <span class="dw__kind">рисунок</span>
         <span class="dw__rule" />
-        <span class="dw__kind">не фотография</span>
+        <span class="dw__what">{caption ?? motif.title}</span>
       </div>
     )
   }
@@ -61,20 +64,12 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
       <g style={`--hatch-fill:url(#${uid}-h)`} set:html={motif.body} />
     </svg>
   </div>
-
-  {
-    !compact && (
-      <p class="dw__cap" aria-hidden="true">
-        {caption ?? motif.title}
-      </p>
-    )
-  }
 </div>
 
 <style>
   .dw {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr;
     height: 100%;
     padding: 0.7rem 0.85rem 0.6rem;
     background: var(--photo-mat);
@@ -100,10 +95,11 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
     text-transform: uppercase;
     color: var(--draw-faint);
   }
-  /* Номер листа лежит на мате, а не на белом поле чертежа: сигнальный цвет
-     там даёт 3.6:1. Берём тёмную ступень — 5.2:1. */
-  .dw__sheet {
+  /* Метка лежит на мате, а не на белом поле чертежа: чистый сигнальный
+     цвет там даёт 3.6:1, поэтому берём тёмную ступень — 5.2:1. */
+  .dw__kind {
     color: var(--accent-ink);
+    flex: none;
   }
   .dw__rule {
     flex: 1;
@@ -177,25 +173,9 @@ const uid = `dw-${slot.replace(/[^a-z0-9]/gi, '')}-${sheet}`;
     overflow: visible;
   }
 
-  /* ---- Подпись ----------------------------------------------------------- */
-
-  .dw__cap {
-    margin-block-start: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: var(--step--1);
-    line-height: 1.4;
-    color: var(--draw-faint);
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
   /* Узкая карточка: обвязка съедает рисунок — убираем её. */
   @container (max-width: 15rem) {
-    .dw__head,
-    .dw__cap {
+    .dw__head {
       display: none;
     }
     .dw {
